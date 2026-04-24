@@ -6,6 +6,7 @@
     <AssemblyName>AOSharp.Bootstrap</AssemblyName>
     <RootNamespace>AOSharp.Bootstrap</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <AOSharpLibrary>true</AOSharpLibrary>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<EnableDynamicLoading>true</EnableDynamicLoading>

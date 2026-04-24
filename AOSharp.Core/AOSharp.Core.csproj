@@ -6,6 +6,7 @@
     <AssemblyName>AOSharp.Core</AssemblyName>
     <RootNamespace>AOSharp.Core</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <AOSharpLibrary>true</AOSharpLibrary>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
