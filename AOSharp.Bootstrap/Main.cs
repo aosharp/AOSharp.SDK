@@ -392,9 +392,9 @@ namespace AOSharp.Bootstrap
                 "GUI.dll", "?Select@MultiListViewItem_c@@QAEX_N0@Z",
                 MultiListViewItem_Select_Hook);
 
-            _sendHook = CreateAndActivateHook<Connection_t.DSend>(
-                "Connection.dll", "?Send@Connection_t@@QAEHIIPBX@Z",
-                Send_Hook);
+            // _sendHook = CreateAndActivateHook<Connection_t.DSend>(
+            //     "Connection.dll", "?Send@Connection_t@@QAEHIIPBX@Z",
+            //     Send_Hook);
 
             _wsRecvHook = CreateAndActivateHook<Ws2_32.RecvDelegate>(
                 "ws2_32.dll", "recv",
