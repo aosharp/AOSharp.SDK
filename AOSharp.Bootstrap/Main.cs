@@ -32,6 +32,12 @@ namespace AOSharp.Bootstrap
         /// <summary>Set by IPC thread on disconnect; game thread performs teardown and UnhookAll on next RunEngine tick.</summary>
         private static volatile bool _disconnecting = false;
         private static bool _disconnectTeardownDone = false;
+        /// <summary>True after hooks have been created for the first time; re-inject re-enables rather than re-creates them.</summary>
+        private static bool _hooksSetUp = false;
+
+        /// <summary>Used to throttle per-frame debug logging in RunEngine hook.</summary>
+        private static int _runEngineFrameCount = 0;
+        private static bool _pluginProxyLoggedThisSession = false;
 
         private static string _lastChatInput;
         private static IntPtr _lastChatInputWindowPtr;
@@ -158,10 +164,15 @@ namespace AOSharp.Bootstrap
             {
                 int processId = Process.GetCurrentProcess().Id;
 
+                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AOSharp", "AOSharp.Bootstrapper.txt");
+                Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+
                 Log.Logger = new LoggerConfiguration()
-                    .WriteTo.File("AOSharp.Bootstrapper.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+                    .WriteTo.File(logPath, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .WriteTo.Debug(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .CreateLogger();
+
+                Log.Information("[Bootstrap] Log file: {Path}", logPath);
 
                 Log.Information($"Initializing Bootstrap for process {processId}");
 
@@ -224,6 +235,8 @@ namespace AOSharp.Bootstrap
 
             _disconnecting = false;
             _disconnectTeardownDone = false;
+            _pluginProxyLoggedThisSession = false;
+            _runEngineFrameCount = 0;
 
             //Notify the main thread we recieved a connection from the GameController.
             _connectEvent.Set();
@@ -308,6 +321,39 @@ namespace AOSharp.Bootstrap
 
         private static unsafe void SetupHooks()
         {
+            if (_hooksSetUp)
+            {
+                // Re-inject path: hooks already exist but were Disable()d during eject.
+                // Re-enable them rather than creating new ones to avoid double-hook conflicts.
+                Log.Information("[Bootstrap] SetupHooks :: Re-enabling existing hooks");
+                _addChildDynelHook?.Enable();
+                _runEngineHook?.Enable();
+                _sendInPlayMessageHook?.Enable();
+                _teleportStartedHook?.Enable();
+                _teleportFailedHook?.Enable();
+                _optionPanelModuleActivatedHook?.Enable();
+                _viewDeletedHook?.Enable();
+                _removeWindowHook?.Enable();
+                _dataBlockToMessageHook?.Enable();
+                _playfieldInitHook?.Enable();
+                _joinTeamRequestHook?.Enable();
+                _joinTeamRequestFailedLowHook?.Enable();
+                _joinTeamRequestFailedHighHook?.Enable();
+                _performSpecialActionHook?.Enable();
+                _handleGroupMessageHook?.Enable();
+                _castNanoSpellHook?.Enable();
+                _containerOpenedHook?.Enable();
+                _buttonBaseSetValueHook?.Enable();
+                _checkBoxSlotButtonToggledHook?.Enable();
+                _dynamicIdGetIdHook?.Enable();
+                _multiListViewItemSelectHook?.Enable();
+                _wsRecvHook?.Enable();
+                _processChatInputHook?.Enable();
+                _getCommandHook?.Enable();
+                Log.Information("[Bootstrap] SetupHooks :: Re-enable complete");
+                return;
+            }
+
             _addChildDynelHook = CreateAndActivateHook<N3Playfield_t.DAddChildDynel>(
                 "N3.dll", "?AddChildDynel@n3Playfield_t@@QAEXPAVn3Dynel_t@@ABVVector3_t@@ABVQuaternion_t@@@Z",
                 N3Playfield_t__AddChildDynel_Hook);
@@ -413,6 +459,7 @@ namespace AOSharp.Bootstrap
             }
 
             Log.Information($"[Bootstrap] SetupHooks :: Complete!");
+            _hooksSetUp = true;
         }
 
         private static IntPtr GetProcAddress(string module, string funcName)
@@ -764,10 +811,20 @@ namespace AOSharp.Bootstrap
             {
                 if (_pluginProxy != null)
                 {
-                    _pluginProxy.RunPluginInitializations();
+                    _runEngineFrameCount++;
+
+                    // Log once when the proxy first becomes active this session
+                    if (!_pluginProxyLoggedThisSession)
+                    {
+                        _pluginProxyLoggedThisSession = true;
+                        Log.Information("[Bootstrap] RunEngine: _pluginProxy is active (frame {Frame})", _runEngineFrameCount);
+                    }
+
                     _pluginProxy.EarlyUpdate(deltaTime);
                     _runEngineHook.OriginalFunction(pThis, deltaTime);
                     _pluginProxy.Update(deltaTime);
+                    // Run after Update() so DynelManager.LocalPlayer is populated before Init() is called.
+                    _pluginProxy.RunPluginInitializations();
                 }
                 else
                 {

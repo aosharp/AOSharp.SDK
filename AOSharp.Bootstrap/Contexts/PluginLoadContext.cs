@@ -58,33 +58,21 @@ namespace AOSharp.Bootstrap.Contexts
                         }
                         // Not pinned and not in Default — try to find it on disk and load into Default
                         // so both contexts share the same instance
-                        foreach (var path in GetProbingPaths())
+                        var sharedPath = TryFindAssemblyPathOnDisk(name, context);
+                        if (sharedPath != null)
                         {
-                            var dllPath = Path.Combine(path, $"{name.Name}.dll");
-                            if (File.Exists(dllPath))
-                            {
-                                Log.Information("Resolving {AssemblyName} into Default from {Path} (shared fallback)", name.Name, dllPath);
-                                return Default.LoadFromAssemblyPath(dllPath);
-                            }
+                            Log.Information("Resolving {AssemblyName} into Default from {Path} (shared fallback)", name.Name, sharedPath);
+                            return Default.LoadFromAssemblyPath(sharedPath);
                         }
                         Log.Warning("[PluginLoadContext] Could not resolve shared assembly {AssemblyName} from Default", name.Name);
                         return null;
                     }
 
-                    foreach (var path in GetProbingPaths())
+                    var path = TryFindAssemblyPathOnDisk(name, context);
+                    if (path != null)
                     {
-                        var dllPath = Path.Combine(path, $"{name.Name}.dll");
-                        var exePath = Path.Combine(path, $"{name.Name}.exe");
-                        if (File.Exists(dllPath))
-                        {
-                            Log.Information("Resolving {AssemblyName} from {Path}", name.Name, dllPath);
-                            return context.LoadFromAssemblyPath(dllPath);
-                        }
-                        if (File.Exists(exePath))
-                        {
-                            Log.Information("Resolving {AssemblyName} from {Path}", name.Name, exePath);
-                            return context.LoadFromAssemblyPath(exePath);
-                        }
+                        Log.Information("Resolving {AssemblyName} from {Path}", name.Name, path);
+                        return context.LoadFromAssemblyPath(path);
                     }
                 }
                 catch (Exception ex)
@@ -125,6 +113,10 @@ namespace AOSharp.Bootstrap.Contexts
                 string localPath = Path.Combine(_pluginPath, $"{assemblyName.Name}.dll");
                 if (File.Exists(localPath))
                     return LoadFromAssemblyPath(localPath);
+
+                var probe = TryFindAssemblyPathOnDisk(assemblyName, this);
+                if (probe != null)
+                    return LoadFromAssemblyPath(probe);
             }
             catch (Exception ex)
             {
@@ -174,6 +166,74 @@ namespace AOSharp.Bootstrap.Contexts
                 paths.Add(runtimeDir);
 
             return paths.Where(p => !string.IsNullOrEmpty(p)).Distinct();
+        }
+
+        /// <summary>
+        /// Finds a dependency on disk: next to any assembly already loaded in <paramref name="context"/>,
+        /// then under each <c>Plugins\*</c> folder (repo compiler output), then standard probing paths.
+        /// </summary>
+        private static string TryFindAssemblyPathOnDisk(AssemblyName assemblyName, AssemblyLoadContext context)
+        {
+            if (assemblyName?.Name == null || context == null)
+                return null;
+
+            var simple = assemblyName.Name;
+
+            foreach (var asm in context.Assemblies)
+            {
+                try
+                {
+                    var loc = asm.Location;
+                    if (string.IsNullOrEmpty(loc))
+                        continue;
+                    var dir = Path.GetDirectoryName(loc);
+                    if (string.IsNullOrEmpty(dir))
+                        continue;
+                    foreach (var ext in new[] { ".dll", ".exe" })
+                    {
+                        var candidate = Path.Combine(dir, simple + ext);
+                        if (File.Exists(candidate))
+                            return candidate;
+                    }
+                }
+                catch
+                {
+                    // Location can throw for dynamic assemblies
+                }
+            }
+
+            var pluginsRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+            if (Directory.Exists(pluginsRoot))
+            {
+                try
+                {
+                    foreach (var sub in Directory.EnumerateDirectories(pluginsRoot))
+                    {
+                        foreach (var ext in new[] { ".dll", ".exe" })
+                        {
+                            var candidate = Path.Combine(sub, simple + ext);
+                            if (File.Exists(candidate))
+                                return candidate;
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignore IO errors
+                }
+            }
+
+            foreach (var basePath in GetProbingPaths())
+            {
+                foreach (var ext in new[] { ".dll", ".exe" })
+                {
+                    var candidate = Path.Combine(basePath, simple + ext);
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+            }
+
+            return null;
         }
     }
 }

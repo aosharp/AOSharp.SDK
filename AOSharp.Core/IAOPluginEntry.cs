@@ -57,13 +57,25 @@ namespace AOSharp.Core
 
         public void Init(string pluginDir)
         {
+            Log.Information("[AOPluginEntry] Init start: pluginDir={Dir}", pluginDir);
             PluginDirectory = pluginDir;
             pluginName = GetType().Name;
-            characterName = DynelManager.LocalPlayer.Name;
+            Log.Information("[AOPluginEntry] pluginName={Name}", pluginName);
+
+            var localPlayer = DynelManager.LocalPlayer;
+            Log.Information("[AOPluginEntry] DynelManager.LocalPlayer is {State}", localPlayer == null ? "NULL" : "set");
+            characterName = localPlayer?.Name ?? string.Empty;
+            Log.Information("[AOPluginEntry] characterName={CharName}", characterName);
+
+            Log.Information("[AOPluginEntry] SetupDirectoryStructure...");
             SetupDirectoryStructure();
+            Log.Information("[AOPluginEntry] SetupLogging...");
             SetupLogging();
+            Log.Information("[AOPluginEntry] LoadIPCMessages...");
             LoadIPCMessages();
+            Log.Information("[AOPluginEntry] Run...");
             Run();
+            Log.Information("[AOPluginEntry] Init complete");
         }
 
         private void SetupLogging()
@@ -79,10 +91,11 @@ namespace AOSharp.Core
 
         private void SetupDirectoryStructure()
         {
+            string charDir = string.IsNullOrEmpty(characterName) ? "_unknown" : characterName;
             PluginDataDirectory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AOSharp", pluginName));
-            LogFile = new FileInfo(Path.Combine(PluginDataDirectory.FullName, characterName, "log.txt"));
+            LogFile = new FileInfo(Path.Combine(PluginDataDirectory.FullName, charDir, "log.txt"));
             GlobalSettingsFile = new FileInfo(Path.Combine(PluginDataDirectory.FullName, "GlobalSettings.json"));
-            PlayerSettingsFile = new FileInfo(Path.Combine(PluginDataDirectory.FullName, characterName, "PlayerSettings.json"));
+            PlayerSettingsFile = new FileInfo(Path.Combine(PluginDataDirectory.FullName, charDir, "PlayerSettings.json"));
 
             if (!PluginDataDirectory.Exists)
                 PluginDataDirectory.Create();

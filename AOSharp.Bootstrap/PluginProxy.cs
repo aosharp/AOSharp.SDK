@@ -371,8 +371,9 @@ namespace AOSharp.Bootstrap
                 if (plugin.Initialized)
                     continue;
 
-                Log.Information("[Bootstrap] Initializating plugin: {Name}", plugin.GetType().FullName);
+                Log.Information("[Bootstrap] RunPluginInitializations: attempting init for {Type} (attempt {Attempt})", plugin.InstanceTypeName, plugin.InitAttempts + 1);
                 plugin.Initialize();
+                Log.Information("[Bootstrap] RunPluginInitializations: after attempt - Initialized={Initialized}", plugin.Initialized);
             }
         }
 
@@ -446,6 +447,8 @@ namespace AOSharp.Bootstrap
     public class Plugin
     {
         public bool Initialized;
+        public int InitAttempts { get; private set; }
+        public string InstanceTypeName => _instance?.GetType()?.FullName ?? "?";
 
         private object _instance;
         private MethodInfo _initMethod;
@@ -463,17 +466,21 @@ namespace AOSharp.Bootstrap
 
         public void Initialize()
         {
+            InitAttempts++;
             try
             {
-                Log.Debug("[Bootstrap] Plugin.Initialize: {Type}, dir={Dir}", _instance.GetType().FullName, _assemblyDir);
+                Log.Debug("[Bootstrap] Plugin.Initialize attempt {Attempt}: {Type}, dir={Dir}", InitAttempts, InstanceTypeName, _assemblyDir);
                 _initMethod.Invoke(_instance, new object[] { _assemblyDir });
+                Initialized = true;
+                Log.Information("[Bootstrap] Plugin.Initialize SUCCESS on attempt {Attempt}: {Type}", InitAttempts, InstanceTypeName);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "[Bootstrap] Plugin.Initialize failed for {Type}: {Message}", _instance.GetType().FullName, ex.Message);
+                // Unwrap TargetInvocationException to get the real inner exception
+                Exception inner = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                Log.Warning("[Bootstrap] Plugin.Initialize attempt {Attempt} FAILED for {Type} (will retry): [{ExType}] {Message}", InitAttempts, InstanceTypeName, inner.GetType().Name, inner.Message);
+                Log.Debug(inner, "[Bootstrap] Plugin.Initialize failure detail");
             }
-
-            Initialized = true;
         }
 
         public void Teardown()
