@@ -168,6 +168,7 @@ namespace AOSharp.Bootstrap
                 Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
                 Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
                     .WriteTo.File(logPath, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .WriteTo.Debug(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .CreateLogger();
