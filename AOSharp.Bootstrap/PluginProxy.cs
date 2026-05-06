@@ -312,6 +312,7 @@ namespace AOSharp.Bootstrap
                 Log.Debug("[Bootstrap] LoadPlugin: loading from {Path}", assemblyPath);
                 // Load plugin assembly in the same context as core
                 Assembly assembly = _pluginContext.LoadFromAssemblyPath(assemblyPath);
+                _pluginContext.RegisterPluginDirectory(Path.GetDirectoryName(assemblyPath));
                 Log.Information("[Bootstrap] Plugin assembly loaded: {Name} from {Path}", assembly.GetName().Name, assemblyPath);
 
                 // Find the first AOSharp.Core.IAOPluginEntry

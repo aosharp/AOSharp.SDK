@@ -17,6 +17,8 @@ namespace AOSharp.Bootstrap.Contexts
         private readonly AssemblyDependencyResolver _resolver;
         private readonly string _pluginPath;
         private readonly Dictionary<string, Assembly> _sharedAssemblies;
+        /// <summary>Physical folders for each loaded plugin DLL (collectible ALC often has empty <see cref="Assembly.Location"/>, so sibling probe needs this).</summary>
+        private readonly List<string> _registeredPluginDirectories = new List<string>();
 
         public PluginLoadContext(string pluginPath, string name, IEnumerable<Assembly> sharedAssemblies = null) 
             : base(name, isCollectible: true)
@@ -38,6 +40,8 @@ namespace AOSharp.Bootstrap.Contexts
 
             Log.Debug("[PluginLoadContext] Created {Name}; managed host dir (core dir) = {ManagedHostDir}; BaseDirectory = {BaseDir}",
                 name, _pluginPath ?? "(null)", AppDomain.CurrentDomain.BaseDirectory);
+
+            RegisterPluginDirectory(_pluginPath);
 
             Resolving += (context, name) =>
             {
@@ -61,7 +65,7 @@ namespace AOSharp.Bootstrap.Contexts
                         }
                         // Not pinned and not in Default — try to find it on disk and load into Default
                         // so both contexts share the same instance
-                        var sharedPath = TryFindAssemblyPathOnDisk(name, context, _pluginPath);
+                        var sharedPath = TryFindAssemblyPathOnDisk(name, context);
                         if (sharedPath != null)
                         {
                             Log.Information("Resolving {AssemblyName} into Default from {Path} (shared fallback)", name.Name, sharedPath);
@@ -71,15 +75,15 @@ namespace AOSharp.Bootstrap.Contexts
                         return null;
                     }
 
-                    var path = TryFindAssemblyPathOnDisk(name, context, _pluginPath);
+                    var path = TryFindAssemblyPathOnDisk(name, context);
                     if (path != null)
                     {
                         Log.Information("Resolving {AssemblyName} from {Path}", name.Name, path);
                         return context.LoadFromAssemblyPath(path);
                     }
 
-                    Log.Warning("[PluginLoadContext] Resolving returned null for {AssemblyName} (not shared). {Diagnostics}",
-                        name.Name, BuildAssemblyProbeDiagnostics(name, context, _pluginPath));
+                    Log.Error("[PluginLoadContext] Resolving returned null for {AssemblyName} (not shared). {Diagnostics}",
+                        name.Name, BuildAssemblyProbeDiagnostics(name, context));
                 }
                 catch (Exception ex)
                 {
@@ -127,12 +131,12 @@ namespace AOSharp.Bootstrap.Contexts
                 }
 
                 Log.Debug("[PluginLoadContext] Load {Name}: resolver and {LocalPath} miss; probing disk", assemblyName.Name, localPath);
-                var probe = TryFindAssemblyPathOnDisk(assemblyName, this, _pluginPath);
+                var probe = TryFindAssemblyPathOnDisk(assemblyName, this);
                 if (probe != null)
                     return LoadFromAssemblyPath(probe);
 
-                Log.Warning("[PluginLoadContext] Load returned null for {AssemblyName}. {Diagnostics}",
-                    assemblyName.Name, BuildAssemblyProbeDiagnostics(assemblyName, this, _pluginPath));
+                Log.Error("[PluginLoadContext] Load returned null for {AssemblyName}. {Diagnostics}",
+                    assemblyName.Name, BuildAssemblyProbeDiagnostics(assemblyName, this));
             }
             catch (Exception ex)
             {
@@ -167,6 +171,25 @@ namespace AOSharp.Bootstrap.Contexts
                    assemblyName.Name == "Serilog";
         }
 
+        /// <summary>Call after each <see cref="AssemblyLoadContext.LoadFromAssemblyPath"/> for a plugin entry assembly.</summary>
+        public void RegisterPluginDirectory(string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+                return;
+            try
+            {
+                var full = Path.GetFullPath(directory.Trim());
+                if (_registeredPluginDirectories.Contains(full, StringComparer.OrdinalIgnoreCase))
+                    return;
+                _registeredPluginDirectories.Add(full);
+                Log.Information("[PluginLoadContext] Registered dependency search dir: {Dir}", full);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[PluginLoadContext] RegisterPluginDirectory failed for {Dir}", directory);
+            }
+        }
+
         private static IEnumerable<string> GetProbingPaths()
         {
             var paths = new List<string>
@@ -185,17 +208,32 @@ namespace AOSharp.Bootstrap.Contexts
         }
 
         /// <summary>
-        /// Finds a dependency on disk: next to any assembly already loaded in <paramref name="context"/>,
-        /// then under each <c>Plugins\*</c> folder next to the managed host (see <paramref name="managedHostDir"/>),
-        /// then standard probing paths. Uses <paramref name="managedHostDir"/> instead of <see cref="AppDomain.CurrentDomain.BaseDirectory"/>
-        /// because the bootstrap often runs with the game's base directory, not the AOSharp bin folder where <c>Plugins</c> lives.
+        /// Finds a dependency on disk: registered plugin dirs (see <see cref="RegisterPluginDirectory"/>),
+        /// then next to any assembly already loaded in <paramref name="context"/> (when <see cref="Assembly.Location"/> is set),
+        /// then under each <c>Plugins\*</c> folder next to the managed host,
+        /// then standard probing paths.
         /// </summary>
-        private static string TryFindAssemblyPathOnDisk(AssemblyName assemblyName, AssemblyLoadContext context, string managedHostDir)
+        private string TryFindAssemblyPathOnDisk(AssemblyName assemblyName, AssemblyLoadContext context)
         {
             if (assemblyName?.Name == null || context == null)
                 return null;
 
             var simple = assemblyName.Name;
+
+            foreach (var dir in _registeredPluginDirectories)
+            {
+                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir))
+                    continue;
+                foreach (var ext in new[] { ".dll", ".exe" })
+                {
+                    var candidate = Path.Combine(dir, simple + ext);
+                    if (File.Exists(candidate))
+                    {
+                        Log.Information("[PluginLoadContext] Probe {Assembly}: found in registered dir -> {Candidate}", simple, candidate);
+                        return candidate;
+                    }
+                }
+            }
 
             foreach (var asm in context.Assemblies)
             {
@@ -220,7 +258,7 @@ namespace AOSharp.Bootstrap.Contexts
                 }
             }
 
-            foreach (var pluginsRoot in EnumeratePluginsRoots(managedHostDir).Distinct(StringComparer.OrdinalIgnoreCase))
+            foreach (var pluginsRoot in EnumeratePluginsRoots(_pluginPath).Distinct(StringComparer.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrEmpty(pluginsRoot))
                     continue;
@@ -273,15 +311,18 @@ namespace AOSharp.Bootstrap.Contexts
             return null;
         }
 
-        /// <summary>One-line summary for warnings when an assembly could not be resolved.</summary>
-        private static string BuildAssemblyProbeDiagnostics(AssemblyName assemblyName, AssemblyLoadContext context, string managedHostDir)
+        /// <summary>One-line summary when an assembly could not be resolved.</summary>
+        private string BuildAssemblyProbeDiagnostics(AssemblyName assemblyName, AssemblyLoadContext context)
         {
             var sb = new StringBuilder();
             sb.Append("Requested=").Append(assemblyName?.FullName ?? "?");
-            sb.Append("; ManagedHostDir=").Append(managedHostDir ?? "(null)");
+            sb.Append("; ManagedHostDir=").Append(_pluginPath ?? "(null)");
             sb.Append("; BaseDirectory=").Append(AppDomain.CurrentDomain.BaseDirectory);
+            sb.Append("; RegisteredDirs=").Append(_registeredPluginDirectories.Count == 0
+                ? "(none)"
+                : string.Join(", ", _registeredPluginDirectories));
 
-            var roots = EnumeratePluginsRoots(managedHostDir).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var roots = EnumeratePluginsRoots(_pluginPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             sb.Append("; Plugins roots: ");
             sb.Append(string.Join(" | ", roots.Select(r => $"{r} [{(Directory.Exists(r) ? "ok" : "missing")}]")));
 
