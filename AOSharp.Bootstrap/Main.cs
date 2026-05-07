@@ -72,6 +72,8 @@ namespace AOSharp.Bootstrap
         /// <summary>Exclusive ACL: only these thread IDs run hook logic; others call original and return. Null = no filter (all threads).</summary>
         private static HashSet<int> _exclusiveAclThreadIds;
 
+        private static List<string> _loadedPluginPaths = new List<string>();
+
         [DllImport("kernel32.dll")]
         private static extern int GetCurrentThreadId();
 
@@ -154,36 +156,45 @@ namespace AOSharp.Bootstrap
         public static void Initialize()
         {
             Log.Information("[Bootstrap] Initialize");
-
             if (_initialized)
                 return;
-
             _initialized = true;
+
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                string assemblyName = new AssemblyName(args.Name).Name;
+                var searchDirs = new HashSet<string>(_loadedPluginPaths.Select(Path.GetDirectoryName))
+                {
+                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+                };
+
+                foreach (var dir in searchDirs)
+                {
+                    string candidate = Path.Combine(dir, assemblyName + ".dll");
+                    if (File.Exists(candidate))
+                        return Assembly.LoadFrom(candidate);
+                }
+                return null;
+            };
 
             try
             {
                 int processId = Process.GetCurrentProcess().Id;
-
                 string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AOSharp", "AOSharp.Bootstrapper.txt");
                 Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Debug()
                     .WriteTo.File(logPath, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .WriteTo.Debug(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                     .CreateLogger();
-
                 Log.Information("[Bootstrap] Log file: {Path}", logPath);
-
                 Log.Information($"Initializing Bootstrap for process {processId}");
-
                 _connectEvent = new ManualResetEvent(false);
                 _unloadEvent = new ManualResetEvent(false);
                 _disconnectEvent = new ManualResetEvent(false);
                 _chatSocketListener = new ChatSocketListener();
                 _reloadedHooks = new ReloadedHooks();
 
-                // Loop: wait for connection, then wait for disconnect; on disconnect tear down and wait for next connection (re-inject = reconnect, no need to reload DLL)
                 while (!_exiting)
                 {
                     try
@@ -201,14 +212,12 @@ namespace AOSharp.Bootstrap
                         Log.Error(ex, "[Bootstrap] IPCServer create/start: {Message}", ex.Message);
                         continue;
                     }
-
                     _connectEvent.Reset();
                     Log.Debug("[Bootstrap] Waiting for client connection (no timeout).");
-                    _connectEvent.WaitOne(); // wait until client connects; pipe is already listening via BeginWaitForConnection
-
+                    _connectEvent.WaitOne();
                     Log.Debug("[Bootstrap] Client connected, waiting for disconnect.");
                     _disconnectEvent.Reset();
-                    _disconnectEvent.WaitOne(); // wait until client disconnects (eject)
+                    _disconnectEvent.WaitOne();
                     Log.Debug("[Bootstrap] Disconnect signalled, looping to start new server.");
                     _connectEvent.Reset();
                 }
@@ -276,12 +285,11 @@ namespace AOSharp.Bootstrap
                 if (_pluginProxy != null)
                 {
                     Log.Information("[Bootstrap] Unloading existing plugin proxy and plugins");
-                    // Unload existing plugins
+                    _loadedPluginPaths.Clear();
                     _pluginProxy.Teardown();
                     _pluginProxy.Unload();
                     _pluginProxy = null;
-                    
-                    // Force garbage collection to complete the unload
+
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                     GC.Collect();
@@ -294,20 +302,18 @@ namespace AOSharp.Bootstrap
                     return;
                 }
 
-                // Create new plugin proxy (no AppDomain needed)
                 Log.Debug("[Bootstrap] Creating new PluginProxy");
                 _pluginProxy = new PluginProxy();
 
-                // Load core assembly
                 string coreAssemblyPath = System.IO.Path.Combine(
                     System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                     "AOSharp.Core.dll");
                 Log.Information("[Bootstrap] Loading core assembly: {Path}", coreAssemblyPath);
                 _pluginProxy.LoadCore(coreAssemblyPath);
 
-                // Load each plugin
                 foreach (string assembly in msg.Assemblies)
                 {
+                    _loadedPluginPaths.Add(assembly);
                     Log.Information("[Bootstrap] Loading plugin assembly: {Path}", assembly);
                     _pluginProxy.LoadPlugin(assembly);
                 }
@@ -315,7 +321,6 @@ namespace AOSharp.Bootstrap
             }
             catch (Exception e)
             {
-                //TODO: Send IPC message back to loader on error
                 Log.Error(e, "[Bootstrap] Plugin load failed: {Message}", e.Message);
             }
         }
