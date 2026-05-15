@@ -1,0 +1,5 @@
+{
+  "author": "Delmus",
+  "description": "Shared definitions and utilities—game IDs, stats, data types, and helpers referenced across the SDK and plugins.",
+  "dependencies": []
+}
