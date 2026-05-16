@@ -268,7 +268,7 @@ namespace AOSharp.Bootstrap
 
             // Load main assembly in the plugin context
             Log.Debug("[Bootstrap] Loading core assembly from path");
-            _coreAssembly = _pluginContext.LoadFromAssemblyPath(assemblyPath);
+            _coreAssembly = _pluginContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(assemblyPath)));
             Log.Information("[Bootstrap] Core assembly loaded: {Name}", _coreAssembly.FullName);
 
             Log.Debug("[Bootstrap] Creating core delegates");
@@ -310,12 +310,10 @@ namespace AOSharp.Bootstrap
             try
             {
                 Log.Debug("[Bootstrap] LoadPlugin: loading from {Path}", assemblyPath);
-                // Load plugin assembly in the same context as core
-                Assembly assembly = _pluginContext.LoadFromAssemblyPath(assemblyPath);
                 _pluginContext.RegisterPluginDirectory(Path.GetDirectoryName(assemblyPath));
+                Assembly assembly = _pluginContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(assemblyPath)));
                 Log.Information("[Bootstrap] Plugin assembly loaded: {Name} from {Path}", assembly.GetName().Name, assemblyPath);
 
-                // Find the first AOSharp.Core.IAOPluginEntry
                 Type[] exportedTypes = assembly.GetExportedTypes();
                 int entryCount = 0;
                 foreach (Type type in exportedTypes)
