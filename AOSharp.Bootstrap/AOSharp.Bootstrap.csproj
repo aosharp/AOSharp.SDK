@@ -10,6 +10,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<EnableDynamicLoading>true</EnableDynamicLoading>
+	<!-- NativeHost loads Bootstrap via hostfxr; requires runtimeconfig next to the DLL -->
+	<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
 	<BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
   </PropertyGroup>
   <ItemGroup>
