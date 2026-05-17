@@ -9,6 +9,7 @@
     <AOSharpLibrary>true</AOSharpLibrary>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
   </PropertyGroup>
   <ItemGroup>

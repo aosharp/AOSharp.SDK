@@ -152,13 +152,68 @@ namespace AOSharp.Bootstrap
             }
         }
 
+        private static string ResolveCoreAssemblyPath()
+        {
+            var bootstrapDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (string.IsNullOrEmpty(bootstrapDir))
+                return "AOSharp.Core.dll";
+
+            var candidates = new[]
+            {
+                Path.Combine(bootstrapDir, "AOSharp.Core.dll"),
+                Path.Combine(bootstrapDir, "..", "AOSharp.Core", "AOSharp.Core.dll"),
+            };
+
+            foreach (var candidate in candidates)
+            {
+                var fullPath = Path.GetFullPath(candidate);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+
+            return Path.Combine(bootstrapDir, "AOSharp.Core.dll");
+        }
+
+        private static void ConfigureBootstrapLogging()
+        {
+            string logPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "AOSharp",
+                "AOSharp.Bootstrapper.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File(logPath, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+                .WriteTo.Debug(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+                .CreateLogger();
+            Log.Information("[Bootstrap] Log file: {Path}", logPath);
+        }
+
         [UnmanagedCallersOnly]
         public static void Initialize()
         {
-            Log.Information("[Bootstrap] Initialize");
             if (_initialized)
                 return;
             _initialized = true;
+
+            try
+            {
+                ConfigureBootstrapLogging();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    var fallback = Path.Combine(
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".",
+                        "AOSharp.Bootstrap.InitError.txt");
+                    File.WriteAllText(fallback, ex.ToString());
+                }
+                catch { }
+                return;
+            }
+
+            Log.Information("[Bootstrap] Initialize");
 
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
@@ -180,15 +235,7 @@ namespace AOSharp.Bootstrap
             try
             {
                 int processId = Process.GetCurrentProcess().Id;
-                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AOSharp", "AOSharp.Bootstrapper.txt");
-                Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-                Log.Logger = new LoggerConfiguration()
-                    .MinimumLevel.Debug()
-                    .WriteTo.File(logPath, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
-                    .WriteTo.Debug(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
-                    .CreateLogger();
-                Log.Information("[Bootstrap] Log file: {Path}", logPath);
-                Log.Information($"Initializing Bootstrap for process {processId}");
+                Log.Information("Initializing Bootstrap for process {ProcessId}", processId);
                 _connectEvent = new ManualResetEvent(false);
                 _unloadEvent = new ManualResetEvent(false);
                 _disconnectEvent = new ManualResetEvent(false);
@@ -305,9 +352,17 @@ namespace AOSharp.Bootstrap
                 Log.Debug("[Bootstrap] Creating new PluginProxy");
                 _pluginProxy = new PluginProxy();
 
-                string coreAssemblyPath = System.IO.Path.Combine(
-                    System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                    "AOSharp.Core.dll");
+                string coreAssemblyPath = ResolveCoreAssemblyPath();
+                if (!File.Exists(coreAssemblyPath))
+                {
+                    Log.Error("[Bootstrap] AOSharp.Core.dll not found (expected under Plugins\\AOSharp.Core or next to Bootstrap). Path: {Path}", coreAssemblyPath);
+                    return;
+                }
+
+                var coreDeps = Path.ChangeExtension(coreAssemblyPath, ".deps.json");
+                if (!File.Exists(coreDeps))
+                    Log.Warning("[Bootstrap] Missing {DepsPath} — PluginLoadContext may fail; recompile AOSharp.Core with GenerateRuntimeConfigurationFiles", coreDeps);
+
                 Log.Information("[Bootstrap] Loading core assembly: {Path}", coreAssemblyPath);
                 _pluginProxy.LoadCore(coreAssemblyPath);
 
@@ -318,6 +373,17 @@ namespace AOSharp.Bootstrap
                     _pluginProxy.LoadPlugin(assembly);
                 }
                 Log.Information("[Bootstrap] Plugin loading complete");
+
+                // RunEngine hook normally drives init + Chat.Update; run once here too when hooks are not active yet.
+                _pluginProxy.RunPluginInitializations();
+                try
+                {
+                    _pluginProxy.Update(0f);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "[Bootstrap] Post-load Update (chat flush) failed: {Message}", ex.Message);
+                }
             }
             catch (Exception e)
             {
@@ -452,16 +518,23 @@ namespace AOSharp.Bootstrap
                 "ws2_32.dll", "recv",
                 WsRecv_Hook);
 
-            if (ProcessChatInputPatcher.Patch(out IntPtr pProcessCommand, out IntPtr pGetCommand))
+            try
             {
-                CommandInterpreter_c.ProcessChatInput = Marshal.GetDelegateForFunctionPointer<CommandInterpreter_c.DProcessChatInput>(pProcessCommand);
-                CommandInterpreter_c.GetCommand = Marshal.GetDelegateForFunctionPointer<CommandInterpreter_c.DGetCommand>(pGetCommand);
+                if (ProcessChatInputPatcher.Patch(out IntPtr pProcessCommand, out IntPtr pGetCommand))
+                {
+                    CommandInterpreter_c.ProcessChatInput = Marshal.GetDelegateForFunctionPointer<CommandInterpreter_c.DProcessChatInput>(pProcessCommand);
+                    CommandInterpreter_c.GetCommand = Marshal.GetDelegateForFunctionPointer<CommandInterpreter_c.DGetCommand>(pGetCommand);
 
-                _processChatInputHook = _reloadedHooks.CreateHook<CommandInterpreter_c.DProcessChatInput>(ProcessChatInput_Hook, (long)pProcessCommand);
-                _processChatInputHook.Activate();
+                    _processChatInputHook = _reloadedHooks.CreateHook<CommandInterpreter_c.DProcessChatInput>(ProcessChatInput_Hook, (long)pProcessCommand);
+                    _processChatInputHook.Activate();
 
-                _getCommandHook = _reloadedHooks.CreateHook<CommandInterpreter_c.DGetCommand>(GetCommand_Hook, (long)pGetCommand);
-                _getCommandHook.Activate();
+                    _getCommandHook = _reloadedHooks.CreateHook<CommandInterpreter_c.DGetCommand>(GetCommand_Hook, (long)pGetCommand);
+                    _getCommandHook.Activate();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[Bootstrap] ProcessChatInputPatcher failed: {Message}", ex.Message);
             }
 
             Log.Information($"[Bootstrap] SetupHooks :: Complete!");
@@ -804,7 +877,7 @@ namespace AOSharp.Bootstrap
                 _exiting = false;
                 try
                 {
-                    _runEngineHook.OriginalFunction(pThis, deltaTime);
+                    _runEngineHook?.OriginalFunction(pThis, deltaTime);
                 }
                 catch (Exception ex)
                 {
@@ -827,12 +900,13 @@ namespace AOSharp.Bootstrap
                     }
 
                     _pluginProxy.EarlyUpdate(deltaTime);
-                    _runEngineHook.OriginalFunction(pThis, deltaTime);
+                    if (_runEngineHook != null)
+                        _runEngineHook.OriginalFunction(pThis, deltaTime);
                     _pluginProxy.Update(deltaTime);
                     // Run after Update() so DynelManager.LocalPlayer is populated before Init() is called.
                     _pluginProxy.RunPluginInitializations();
                 }
-                else
+                else if (_runEngineHook != null)
                 {
                     _runEngineHook.OriginalFunction(pThis, deltaTime);
                 }
