@@ -352,17 +352,56 @@ namespace AOSharp.Bootstrap.Contexts
             return sb.ToString();
         }
 
-        /// <summary>AOSharp plugin folders: <c>{managedHostDir}\Plugins</c>, then Bootstrap assembly dir, then BaseDirectory fallback.</summary>
+        /// <summary>
+        /// AOSharp plugin folders: parent <c>Plugins</c> when the host lives under <c>Plugins\{name}</c>,
+        /// then <c>{dir}\Plugins</c> for other layouts, then BaseDirectory fallback.
+        /// </summary>
         private static IEnumerable<string> EnumeratePluginsRoots(string managedHostDir)
         {
+            foreach (var root in GetPluginsRootIfUnderPluginsFolder(managedHostDir))
+                yield return root;
+
             if (!string.IsNullOrEmpty(managedHostDir))
                 yield return Path.Combine(managedHostDir, "Plugins");
 
             var bootstrapDir = Path.GetDirectoryName(typeof(PluginLoadContext).Assembly.Location);
+            foreach (var root in GetPluginsRootIfUnderPluginsFolder(bootstrapDir))
+                yield return root;
+
             if (!string.IsNullOrEmpty(bootstrapDir))
                 yield return Path.Combine(bootstrapDir, "Plugins");
 
-            yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            if (!string.IsNullOrEmpty(baseDir))
+                yield return Path.Combine(baseDir, "Plugins");
+        }
+
+        /// <summary>If <paramref name="directory"/> is <c>...\Plugins\Something</c>, returns <c>...\Plugins</c>.</summary>
+        private static IEnumerable<string> GetPluginsRootIfUnderPluginsFolder(string directory)
+        {
+            var root = TryGetPluginsRootIfUnderPluginsFolder(directory);
+            if (root != null)
+                yield return root;
+        }
+
+        private static string TryGetPluginsRootIfUnderPluginsFolder(string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+                return null;
+
+            try
+            {
+                var full = Path.GetFullPath(directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                var parent = Directory.GetParent(full);
+                if (parent != null && string.Equals(parent.Name, "Plugins", StringComparison.OrdinalIgnoreCase))
+                    return parent.FullName;
+            }
+            catch
+            {
+                // ignore invalid paths
+            }
+
+            return null;
         }
     }
 }
