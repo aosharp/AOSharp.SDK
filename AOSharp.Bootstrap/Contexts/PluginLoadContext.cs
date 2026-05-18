@@ -152,6 +152,13 @@ namespace AOSharp.Bootstrap.Contexts
                 string libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
                 if (libraryPath != null)
                     return LoadUnmanagedDllFromPath(libraryPath);
+
+                libraryPath = TryFindUnmanagedDllPath(unmanagedDllName);
+                if (libraryPath != null)
+                {
+                    Log.Debug("[PluginLoadContext] LoadUnmanagedDll {Name}: plugin probe -> {Path}", unmanagedDllName, libraryPath);
+                    return LoadUnmanagedDllFromPath(libraryPath);
+                }
             }
             catch (Exception ex)
             {
@@ -160,16 +167,105 @@ namespace AOSharp.Bootstrap.Contexts
             return IntPtr.Zero;
         }
 
+        /// <summary>Find native SQLite / other deps next to registered plugin folders (e.g. runtimes\win-x64\native).</summary>
+        private string TryFindUnmanagedDllPath(string unmanagedDllName)
+        {
+            if (string.IsNullOrWhiteSpace(unmanagedDllName))
+                return null;
+
+            var baseName = unmanagedDllName;
+            if (baseName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ||
+                baseName.EndsWith(".so", StringComparison.OrdinalIgnoreCase) ||
+                baseName.EndsWith(".dylib", StringComparison.OrdinalIgnoreCase))
+                baseName = Path.GetFileNameWithoutExtension(baseName);
+
+            var fileNames = new[] { $"{baseName}.dll", $"lib{baseName}.so", $"lib{baseName}.dylib", $"{baseName}.dylib" };
+
+            foreach (var dir in _registeredPluginDirectories)
+            {
+                var hit = ProbeUnmanagedInDirectory(dir, fileNames);
+                if (hit != null)
+                    return hit;
+            }
+
+            foreach (var pluginsRoot in EnumeratePluginsRoots(_pluginPath).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(pluginsRoot) || !Directory.Exists(pluginsRoot))
+                    continue;
+
+                try
+                {
+                    foreach (var sub in Directory.EnumerateDirectories(pluginsRoot))
+                    {
+                        var hit = ProbeUnmanagedInDirectory(sub, fileNames);
+                        if (hit != null)
+                            return hit;
+                    }
+                }
+                catch
+                {
+                    // ignore scan errors
+                }
+            }
+
+            return null;
+        }
+
+        private static string ProbeUnmanagedInDirectory(string directory, string[] fileNames)
+        {
+            if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+                return null;
+
+            foreach (var fileName in fileNames)
+            {
+                var direct = Path.Combine(directory, fileName);
+                if (File.Exists(direct))
+                    return direct;
+            }
+
+            try
+            {
+                foreach (var candidate in Directory.EnumerateFiles(directory, fileNames[0], SearchOption.AllDirectories))
+                    return candidate;
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
         private bool IsSharedAssembly(AssemblyName assemblyName)
         {
-            // Define which assemblies should be shared between contexts
-            return assemblyName.Name == "AOSharp.Common" ||
-                   assemblyName.Name == "AOSharp.Bootstrap" ||
-                   assemblyName.Name.StartsWith("System.") ||
-                   assemblyName.Name.StartsWith("Microsoft.") ||
-                   assemblyName.Name == "Newtonsoft.Json" ||
-                   assemblyName.Name == "Serilog";
+            if (assemblyName.Name == null)
+                return false;
+
+            var name = assemblyName.Name;
+
+            // Assemblies that must be the same instance in Default and plugin ALCs
+            if (name == "AOSharp.Common" ||
+                name == "AOSharp.Bootstrap" ||
+                name == "Newtonsoft.Json" ||
+                name == "Serilog")
+                return true;
+
+            // Host / runtime facades (System.*) are already in Default
+            if (name.StartsWith("System.", StringComparison.Ordinal))
+                return true;
+
+            // Only share Microsoft.* already loaded in Default (host/runtime).
+            // Plugin-deployed Microsoft.* (e.g. Microsoft.Data.Sqlite) must load in the plugin ALC
+            // so SQLitePCLRaw.* and native e_sqlite3 resolve from Plugins\AOItemQueryService (etc.).
+            if (name.StartsWith("Microsoft.", StringComparison.Ordinal))
+                return IsLoadedInDefault(name);
+
+            return false;
         }
+
+        private static bool IsLoadedInDefault(string simpleName) =>
+            AssemblyLoadContext.Default.Assemblies.Any(a =>
+                string.Equals(a.GetName().Name, simpleName, StringComparison.OrdinalIgnoreCase));
 
         /// <summary>Call after each <see cref="AssemblyLoadContext.LoadFromAssemblyPath"/> for a plugin entry assembly.</summary>
         public void RegisterPluginDirectory(string directory)
