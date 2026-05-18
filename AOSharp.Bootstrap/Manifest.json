@@ -1,5 +1,6 @@
 {
   "author": "Delmus",
   "description": "Bootstraps the AOSharp runtime into the client process.",
+  "library": true,
   "dependencies": []
 }

@@ -1,5 +1,6 @@
 {
   "author": "Delmus",
   "description": "Shared definitions and utilities.",
+  "library": true,
   "dependencies": []
 }

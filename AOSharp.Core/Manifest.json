@@ -1,5 +1,7 @@
 {
   "author": "Delmus",
   "description": "Library that contains the core functionality of AOSharp.",
+  "library": true,
+  "section": "Core",
   "dependencies": []
 }
