@@ -294,6 +294,7 @@ namespace AOSharp.Bootstrap
             _disconnectTeardownDone = false;
             _pluginProxyLoggedThisSession = false;
             _runEngineFrameCount = 0;
+            PluginProxy.ResetGameThreadForInit();
 
             //Notify the main thread we recieved a connection from the GameController.
             _connectEvent.Set();
@@ -372,18 +373,7 @@ namespace AOSharp.Bootstrap
                     Log.Information("[Bootstrap] Loading plugin assembly: {Path}", assembly);
                     _pluginProxy.LoadPlugin(assembly);
                 }
-                Log.Information("[Bootstrap] Plugin loading complete");
-
-                // RunEngine hook normally drives init + Chat.Update; run once here too when hooks are not active yet.
-                _pluginProxy.RunPluginInitializations();
-                try
-                {
-                    _pluginProxy.Update(0f);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "[Bootstrap] Post-load Update (chat flush) failed: {Message}", ex.Message);
-                }
+                Log.Information("[Bootstrap] Plugin loading complete; init will run on the next RunEngine frame");
             }
             catch (Exception e)
             {
@@ -903,8 +893,8 @@ namespace AOSharp.Bootstrap
                     if (_runEngineHook != null)
                         _runEngineHook.OriginalFunction(pThis, deltaTime);
                     _pluginProxy.Update(deltaTime);
-                    // Run after Update() so DynelManager.LocalPlayer is populated before Init() is called.
-                    _pluginProxy.RunPluginInitializations();
+                    // Game thread only: run after Update() so DynelManager.LocalPlayer is populated before Init().
+                    _pluginProxy.RunPluginInitializations(Environment.CurrentManagedThreadId);
                 }
                 else if (_runEngineHook != null)
                 {

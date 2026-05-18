@@ -363,8 +363,23 @@ namespace AOSharp.Bootstrap
             }
         }
 
-        public void RunPluginInitializations()
+        /// <summary>Managed thread id of the game thread (RunEngine); set on first init call.</summary>
+        private static int _gameThreadManagedId;
+
+        /// <summary>
+        /// Initializes loaded plugins. Must be called from the RunEngine hook on the game thread only.
+        /// </summary>
+        public void RunPluginInitializations(int callerManagedThreadId)
         {
+            if (_gameThreadManagedId == 0)
+                _gameThreadManagedId = callerManagedThreadId;
+            else if (callerManagedThreadId != _gameThreadManagedId)
+            {
+                Log.Error("[Bootstrap] RunPluginInitializations called from thread {CallerId}, expected game thread {GameThreadId}; skipping",
+                    callerManagedThreadId, _gameThreadManagedId);
+                return;
+            }
+
             foreach (Plugin plugin in _plugins)
             {
                 if (plugin.Initialized)
@@ -374,6 +389,11 @@ namespace AOSharp.Bootstrap
                 plugin.Initialize();
                 Log.Information("[Bootstrap] RunPluginInitializations: after attempt - Initialized={Initialized}", plugin.Initialized);
             }
+        }
+
+        internal static void ResetGameThreadForInit()
+        {
+            _gameThreadManagedId = 0;
         }
 
         public void Teardown()
@@ -445,10 +465,13 @@ namespace AOSharp.Bootstrap
 
     public class Plugin
     {
-        public bool Initialized;
+        /// <summary>Published after a successful <see cref="Initialize"/> (read without lock for fast skip in RunEngine).</summary>
+        public volatile bool Initialized;
         public int InitAttempts { get; private set; }
         public string InstanceTypeName => _instance?.GetType()?.FullName ?? "?";
 
+        private readonly object _initLock = new object();
+        private bool _initializing;
         private object _instance;
         private MethodInfo _initMethod;
         private MethodInfo _teardownMethod;
@@ -463,22 +486,34 @@ namespace AOSharp.Bootstrap
             _assemblyDir = assemblyDir;
         }
 
+        /// <summary>Game thread only (via <see cref="PluginProxy.RunPluginInitializations"/>).</summary>
         public void Initialize()
         {
-            InitAttempts++;
-            try
+            lock (_initLock)
             {
-                Log.Debug("[Bootstrap] Plugin.Initialize attempt {Attempt}: {Type}, dir={Dir}", InitAttempts, InstanceTypeName, _assemblyDir);
-                _initMethod.Invoke(_instance, new object[] { _assemblyDir });
-                Initialized = true;
-                Log.Information("[Bootstrap] Plugin.Initialize SUCCESS on attempt {Attempt}: {Type}", InitAttempts, InstanceTypeName);
-            }
-            catch (Exception ex)
-            {
-                // Unwrap TargetInvocationException to get the real inner exception
-                Exception inner = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
-                Log.Warning("[Bootstrap] Plugin.Initialize attempt {Attempt} FAILED for {Type} (will retry): [{ExType}] {Message}", InitAttempts, InstanceTypeName, inner.GetType().Name, inner.Message);
-                Log.Debug(inner, "[Bootstrap] Plugin.Initialize failure detail");
+                if (Initialized || _initializing)
+                    return;
+
+                _initializing = true;
+                InitAttempts++;
+                try
+                {
+                    Log.Debug("[Bootstrap] Plugin.Initialize attempt {Attempt}: {Type}, dir={Dir}", InitAttempts, InstanceTypeName, _assemblyDir);
+                    _initMethod.Invoke(_instance, new object[] { _assemblyDir });
+                    Initialized = true;
+                    Log.Information("[Bootstrap] Plugin.Initialize SUCCESS on attempt {Attempt}: {Type}", InitAttempts, InstanceTypeName);
+                }
+                catch (Exception ex)
+                {
+                    // Unwrap TargetInvocationException to get the real inner exception
+                    Exception inner = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                    Log.Warning("[Bootstrap] Plugin.Initialize attempt {Attempt} FAILED for {Type} (will retry): [{ExType}] {Message}", InitAttempts, InstanceTypeName, inner.GetType().Name, inner.Message);
+                    Log.Debug(inner, "[Bootstrap] Plugin.Initialize failure detail");
+                }
+                finally
+                {
+                    _initializing = false;
+                }
             }
         }
 
