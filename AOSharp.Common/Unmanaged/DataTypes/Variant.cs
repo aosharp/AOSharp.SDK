@@ -1,8 +1,9 @@
-﻿using System;
+﻿using AOSharp.Common.GameData;
 using AOSharp.Common.Unmanaged.Imports;
+using System;
 
 namespace AOSharp.Common.Unmanaged.DataTypes
-{ 
+{
     public class Variant : IDisposable
     {
         public const int SizeOf = 0x10;
@@ -75,6 +76,13 @@ namespace AOSharp.Common.Unmanaged.DataTypes
             return str.ToString();
         }
 
+        public unsafe Identity AsIdentity()
+        {
+            Identity result = default;
+            Variant_c.AsIdentity(Pointer, (IntPtr)(&result));
+            return result;
+        }
+
         public void SetBool(bool value) => Variant_c.SetBool(Pointer, value);
 
         public static implicit operator Variant(int v) => Variant.Create(v);
@@ -93,7 +101,7 @@ namespace AOSharp.Common.Unmanaged.DataTypes
 
         ~Variant()
         {
-            if(_shouldDispose)
+            if (_shouldDispose)
                 Dispose(disposing: false);
         }
 

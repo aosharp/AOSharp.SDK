@@ -63,6 +63,10 @@ namespace AOSharp.Bootstrap
         public MultiListViewItemSelectionChangedDelegate MultiListViewItemSelectionChanged;
         public delegate int GetDynamicIDOverrideDelegate(string name);
         public GetDynamicIDOverrideDelegate GetDynamicIDOverride;
+        public delegate void MultiListViewItemAddedDelegate(IntPtr pContainer, IntPtr pItem, IPoint point);
+        public MultiListViewItemAddedDelegate MultiListViewItemAdded;
+        public delegate void MultiListViewItemRemovedDelegate(IntPtr pContainer, IntPtr pItem);
+        public MultiListViewItemRemovedDelegate MultiListViewItemRemoved;
     }
 
     // Note: No longer inherits from MarshalByRefObject as AssemblyLoadContext doesn't require marshaling
@@ -137,6 +141,10 @@ namespace AOSharp.Bootstrap
         public void CheckBoxToggled(IntPtr pCheckBox, bool enabled) => _coreDelegates?.CheckBoxToggled?.Invoke(pCheckBox, enabled);
 
         public void MultiListViewItemSelectionChanged(IntPtr pItem, bool selected) => _coreDelegates?.MultiListViewItemSelectionChanged?.Invoke(pItem, selected);
+       
+        public void MultiListViewItemAdded(IntPtr pContainer, IntPtr pItem, IPoint point) => _coreDelegates?.MultiListViewItemAdded?.Invoke(pContainer, pItem, point);
+
+        public void MultiListViewItemRemoved(IntPtr pContainer, IntPtr pItem) => _coreDelegates?.MultiListViewItemRemoved?.Invoke(pContainer, pItem);
 
         public unsafe bool AttemptingSpellCast(int targetType, int targetId, int spellType, int spellId)
         {
@@ -298,7 +306,9 @@ namespace AOSharp.Bootstrap
                 ButtonPressed = CreateDelegate<CoreDelegates.ButtonPressedDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnButtonPressed"),
                 CheckBoxToggled = CreateDelegate<CoreDelegates.CheckBoxToggledDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnCheckBoxToggled"),
                 MultiListViewItemSelectionChanged = CreateDelegate<CoreDelegates.MultiListViewItemSelectionChangedDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnMultiListViewItemStateChanged"),
-                GetDynamicIDOverride = CreateDelegate<CoreDelegates.GetDynamicIDOverrideDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnDynamicIDResolve")
+                GetDynamicIDOverride = CreateDelegate<CoreDelegates.GetDynamicIDOverrideDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnDynamicIDResolve"),
+                MultiListViewItemAdded = CreateDelegate<CoreDelegates.MultiListViewItemAddedDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnMultiListViewItemAdded"),
+                MultiListViewItemRemoved = CreateDelegate<CoreDelegates.MultiListViewItemRemovedDelegate>(_coreAssembly, "AOSharp.Core.UI.UIController", "OnMultiListViewItemRemoved"),
             };
 
             _coreDelegates.Init();
