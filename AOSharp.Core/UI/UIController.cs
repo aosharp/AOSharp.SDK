@@ -1,10 +1,10 @@
 ﻿using AOSharp.Common.Unmanaged.Imports;
 using AOSharp.Common.Unmanaged.Interfaces;
+using AOSharp.Common.GameData;
+using AOSharp.Core.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AOSharp.Core.UI
 {
@@ -14,6 +14,10 @@ namespace AOSharp.Core.UI
         public static EventHandler<Window> WindowDeleted;
         private static Dictionary<int, View> _trackedViews = new Dictionary<int, View>();
         private static List<Window> _windows = new List<Window>();
+        public static event Action<IntPtr, IntPtr, IPoint> MultiListViewItemAdded;
+        public static event Action<IntPtr, IntPtr> MultiListViewItemRemoved;
+        public static event Action<Identity> ItemAdded;
+        public static event Action<Identity> ItemRemoved;
 
         internal static void RegisterView(View view)
         {
@@ -47,7 +51,7 @@ namespace AOSharp.Core.UI
         {
             try
             {
-                foreach(View view in _trackedViews.Values)
+                foreach (View view in _trackedViews.Values)
                 {
                     view.Update();
                 }
@@ -60,7 +64,7 @@ namespace AOSharp.Core.UI
 
         internal static void Cleanup()
         {
-            foreach(Window window in _windows)
+            foreach (Window window in _windows)
                 window.Close();
         }
 
@@ -111,10 +115,40 @@ namespace AOSharp.Core.UI
         {
             MultiListView listView = MultiListViewItem.GetListViewForPointer(pItem);
 
-            if(listView == null)
+            if (listView == null)
                 return;
 
             listView.OnItemSelectionStateChanged(pItem, selected);
+        }
+
+        private static void OnMultiListViewItemAdded(IntPtr pContainer, IntPtr pItem, IPoint point)
+        {
+            MultiListViewItemAdded?.Invoke(pContainer, pItem, point);
+
+
+            if (!TryGetIdentityFromPointer(pItem, out Identity slot))
+                return;
+
+            ItemAdded?.Invoke(slot);
+        }
+
+        private static void OnMultiListViewItemRemoved(IntPtr pContainer, IntPtr pItem)
+        {
+            MultiListViewItemRemoved?.Invoke(pContainer, pItem);
+
+            if (!TryGetIdentityFromPointer(pItem, out Identity slot))
+                return;
+
+            ItemRemoved?.Invoke(slot);
+        }
+
+        private static bool TryGetIdentityFromPointer(IntPtr pItem, out Identity identity)
+        {
+            identity = default;
+            var id = new MultiListViewItem(pItem).GetID()?.AsIdentity();
+            if (id == null || id.Value.Instance == 0) return false;
+            identity = id.Value;
+            return true;
         }
 
         private static int OnDynamicIDResolve(string name)

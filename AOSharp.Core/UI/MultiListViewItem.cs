@@ -19,7 +19,7 @@ namespace AOSharp.Core.UI
             }
         }
 
-        protected MultiListViewItem(IntPtr pointer)
+        public MultiListViewItem(IntPtr pointer)
         {
             _pointer = pointer;
         }

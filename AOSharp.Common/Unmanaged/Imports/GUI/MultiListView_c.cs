@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Text;
 using System.Runtime.InteropServices;
-using AOSharp.Common.Unmanaged.DataTypes;
 using AOSharp.Common.GameData;
+using Reloaded.Hooks.Definitions.X86;
 
 namespace AOSharp.Common.Unmanaged.Imports
 {
@@ -58,6 +57,17 @@ namespace AOSharp.Common.Unmanaged.Imports
         public static extern void ItemSelectionStateChanged(IntPtr pThis, IntPtr pItem, byte selected);
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, SetLastError = true)]
         public delegate void DItemSelectionStateChanged(IntPtr pThis, IntPtr pItem, byte selected);
+
+        [DllImport("GUI.dll", EntryPoint = "?AddItem@MultiListView_c@@QAE_NABVIPoint@@PAVMultiListViewItem_c@@_N@Z", CallingConvention = CallingConvention.ThisCall)]
+        public static extern bool AddItem(IntPtr pThis, IntPtr pGridPos, IntPtr pItem, bool unk);
+
+        [Function(CallingConventions.MicrosoftThiscall)]
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall, SetLastError = true)]
+        public delegate bool DAddItem(IntPtr pThis, IntPtr pGridPos, IntPtr pItem, bool unk);
+
+        [Function(CallingConventions.MicrosoftThiscall)]
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void DRemoveItem(IntPtr pThis, IntPtr pItem);
 
         public static IntPtr Create(Rect rect, int flags, int unk1, int unk2)
         {

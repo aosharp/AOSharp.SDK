@@ -14,12 +14,12 @@ using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Loader;
-using AOSharp.Bootstrap.Contexts;
+
 namespace AOSharp.Bootstrap
 {
     public class Main
     {
+        private static Queue<(IntPtr pThis, IntPtr pItem, IPoint point)> _pendingAddItems = new Queue<(IntPtr, IntPtr, IPoint)>();
         private static IPCServer _ipcPipe;
         private static ManualResetEvent _connectEvent;
         private static ManualResetEvent _unloadEvent;
@@ -68,6 +68,8 @@ namespace AOSharp.Bootstrap
         private static IHook<N3EngineClientAnarchy_t.DPlayfieldInit> _playfieldInitHook;
         private static IHook<N3EngineClientAnarchy_t.DRunEngine> _runEngineHook;
         private static IHook<N3Playfield_t.DAddChildDynel> _addChildDynelHook;
+        private static IHook<MultiListView_c.DAddItem> _multiListViewAddItemHook;
+        private static IHook<MultiListView_c.DRemoveItem> _multiListViewRemoveItemHook;
 
         /// <summary>Exclusive ACL: only these thread IDs run hook logic; others call original and return. Null = no filter (all threads).</summary>
         private static HashSet<int> _exclusiveAclThreadIds;
@@ -412,6 +414,8 @@ namespace AOSharp.Bootstrap
                 _wsRecvHook?.Enable();
                 _processChatInputHook?.Enable();
                 _getCommandHook?.Enable();
+                _multiListViewAddItemHook?.Enable();
+                _multiListViewRemoveItemHook?.Enable();
                 Log.Information("[Bootstrap] SetupHooks :: Re-enable complete");
                 return;
             }
@@ -500,6 +504,15 @@ namespace AOSharp.Bootstrap
                 "GUI.dll", "?Select@MultiListViewItem_c@@QAEX_N0@Z",
                 MultiListViewItem_Select_Hook);
 
+            _multiListViewAddItemHook = CreateAndActivateHook<MultiListView_c.DAddItem>(
+                "GUI.dll",
+                "?AddItem@MultiListView_c@@QAE_NABVIPoint@@PAVMultiListViewItem_c@@_N@Z",
+                MultiListView_AddItem_Hook);
+
+            _multiListViewRemoveItemHook = CreateAndActivateHook<MultiListView_c.DRemoveItem>(
+                "GUI.dll",
+                "?RemoveItem@MultiListView_c@@QAEXPAVMultiListViewItem_c@@@Z",
+                MultiListView_RemoveItem_Hook);
             // _sendHook = CreateAndActivateHook<Connection_t.DSend>(
             //     "Connection.dll", "?Send@Connection_t@@QAEHIIPBX@Z",
             //     Send_Hook);
@@ -574,6 +587,8 @@ namespace AOSharp.Bootstrap
                 _playfieldInitHook?.Disable();
                 _runEngineHook?.Disable();
                 _addChildDynelHook?.Disable();
+                _multiListViewAddItemHook?.Disable();
+                _multiListViewRemoveItemHook?.Disable();
                 Log.Debug("[Bootstrap] UnhookAll: done");
             }
             catch (Exception ex)
@@ -620,6 +635,32 @@ namespace AOSharp.Bootstrap
             _multiListViewItemSelectHook.OriginalFunction(pThis, selected, unk);
             try { _pluginProxy?.MultiListViewItemSelectionChanged(pThis, selected); }
             catch (Exception ex) { Log.Error(ex, "[Bootstrap] MultiListViewItem_Select_Hook: {Message}", ex.Message); }
+        }
+
+        public static bool MultiListView_AddItem_Hook(IntPtr pThis, IntPtr pGridPos, IntPtr pItem, bool unk)
+        {
+            bool result = _multiListViewAddItemHook.OriginalFunction(pThis, pGridPos, pItem, unk);
+
+            try
+            {
+                unsafe
+                {
+                    IPoint point = *(IPoint*)pGridPos;
+                    _pendingAddItems.Enqueue((pThis, pItem, point));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[Bootstrap] MultiListView_AddItem_Hook: {Message}", ex.Message);
+            }
+
+            return result;
+        }
+
+        public static void MultiListView_RemoveItem_Hook(IntPtr pThis, IntPtr pItem)
+        {
+            _multiListViewRemoveItemHook.OriginalFunction(pThis, pItem);
+            _pluginProxy?.MultiListViewItemRemoved(pThis, pItem);
         }
 
         public static void CheckBox_SlotButtonToggled_Hook(IntPtr pThis, bool enabled)
@@ -890,6 +931,13 @@ namespace AOSharp.Bootstrap
                     }
 
                     _pluginProxy.EarlyUpdate(deltaTime);
+
+                    while (_pendingAddItems.TryDequeue(out var pending))
+                    {
+                        try { _pluginProxy?.MultiListViewItemAdded(pending.pThis, pending.pItem, pending.point); }
+                        catch (Exception ex) { Log.Error(ex, "[Bootstrap] FlushAddItems: {Message}", ex.Message); }
+                    }
+
                     if (_runEngineHook != null)
                         _runEngineHook.OriginalFunction(pThis, deltaTime);
                     _pluginProxy.Update(deltaTime);

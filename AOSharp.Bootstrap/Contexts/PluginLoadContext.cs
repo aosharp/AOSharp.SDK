@@ -79,7 +79,7 @@ namespace AOSharp.Bootstrap.Contexts
                     if (path != null)
                     {
                         Log.Information("Resolving {AssemblyName} from {Path}", name.Name, path);
-                        return context.LoadFromAssemblyPath(path);
+                        return context.LoadFromStream(new MemoryStream(File.ReadAllBytes(path)));
                     }
 
                     Log.Error("[PluginLoadContext] Resolving returned null for {AssemblyName} (not shared). {Diagnostics}",
@@ -120,20 +120,20 @@ namespace AOSharp.Bootstrap.Contexts
                 if (assemblyPath != null)
                 {
                     Log.Debug("[PluginLoadContext] Load {Name}: dependency resolver -> {Path}", assemblyName.Name, assemblyPath);
-                    return LoadFromAssemblyPath(assemblyPath);
+                    return LoadFromStream(new MemoryStream(File.ReadAllBytes(assemblyPath)));
                 }
 
                 string localPath = Path.Combine(_pluginPath, $"{assemblyName.Name}.dll");
                 if (File.Exists(localPath))
                 {
                     Log.Debug("[PluginLoadContext] Load {Name}: next to core dir -> {Path}", assemblyName.Name, localPath);
-                    return LoadFromAssemblyPath(localPath);
+                    return LoadFromStream(new MemoryStream(File.ReadAllBytes(localPath)));
                 }
 
                 Log.Debug("[PluginLoadContext] Load {Name}: resolver and {LocalPath} miss; probing disk", assemblyName.Name, localPath);
                 var probe = TryFindAssemblyPathOnDisk(assemblyName, this);
                 if (probe != null)
-                    return LoadFromAssemblyPath(probe);
+                    return LoadFromStream(new MemoryStream(File.ReadAllBytes(probe)));
 
                 Log.Error("[PluginLoadContext] Load returned null for {AssemblyName}. {Diagnostics}",
                     assemblyName.Name, BuildAssemblyProbeDiagnostics(assemblyName, this));
