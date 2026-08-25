@@ -1,5 +1,6 @@
 using AOSharp.Bootstrap.Contexts;
 using AOSharp.Common.GameData;
+using AOSharp.Common.Runtime;
 using AOSharp.Common.SharedEventArgs;
 using Serilog;
 using System;
@@ -269,6 +270,7 @@ namespace AOSharp.Bootstrap
             // Load main assembly in the plugin context
             Log.Debug("[Bootstrap] Loading core assembly from path");
             _coreAssembly = _pluginContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(assemblyPath)));
+            AssemblyContentRoots.RegisterFromAssemblyPath(assemblyPath);
             Log.Information("[Bootstrap] Core assembly loaded: {Name}", _coreAssembly.FullName);
 
             Log.Debug("[Bootstrap] Creating core delegates");
@@ -312,6 +314,7 @@ namespace AOSharp.Bootstrap
                 Log.Debug("[Bootstrap] LoadPlugin: loading from {Path}", assemblyPath);
                 _pluginContext.RegisterPluginDirectory(Path.GetDirectoryName(assemblyPath));
                 Assembly assembly = _pluginContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(assemblyPath)));
+                AssemblyContentRoots.RegisterFromAssemblyPath(assemblyPath);
                 Log.Information("[Bootstrap] Plugin assembly loaded: {Name} from {Path}", assembly.GetName().Name, assemblyPath);
 
                 Type[] exportedTypes = assembly.GetExportedTypes();
@@ -431,6 +434,7 @@ namespace AOSharp.Bootstrap
         public void Unload()
         {
             Log.Information("[Bootstrap] Unload: clearing plugin proxy and requesting ALC unload");
+            AssemblyContentRoots.Clear();
             try
             {
                 _plugins?.Clear();

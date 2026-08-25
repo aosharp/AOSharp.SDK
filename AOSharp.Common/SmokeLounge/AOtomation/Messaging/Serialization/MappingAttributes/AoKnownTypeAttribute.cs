@@ -15,6 +15,7 @@
 namespace SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes
 {
     using System;
+    using SmokeLounge.AOtomation.Messaging.Serialization;
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class AoKnownTypeAttribute : Attribute

@@ -14,12 +14,8 @@
 
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
-    using AOSharp.Common.Unmanaged.DataTypes;
-    using AOSharp.Common.Unmanaged.Imports;
     using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
-    using System.Text;
-    using System;
 
     [AoContract((int)N3MessageType.FormatFeedback)]
     public class FormatFeedbackMessage : N3Message
@@ -44,27 +40,5 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(2)]
         public int Unknown2 { get; set; }
         #endregion
-
-        private string _formattedMessage = null;
-        public string FormattedMessage
-        {
-            get
-            {
-                if (_formattedMessage == null)
-                    _formattedMessage = FormatMessage();
-
-                return _formattedMessage;
-            }
-        }
-
-        private string FormatMessage()
-        {
-            StdString stdStr = StdString.Create();
-            RemoteFormat.ParseString(stdStr.Pointer, Message);
-            string formattedMessage = stdStr.ToString();
-            stdStr.Dispose();
-
-            return formattedMessage;
-        }
     }
 }

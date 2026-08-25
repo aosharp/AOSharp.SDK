@@ -5,7 +5,6 @@ using AOSharp.Common.GameData;
 using AOSharp.Common.Helpers;
 using AOSharp.Common.Unmanaged.DataTypes;
 using AOSharp.Common.Unmanaged.Imports;
-using static SmokeLounge.AOtomation.Messaging.Messages.N3Messages.FullCharacterMessage;
 
 namespace AOSharp.Common.Unmanaged.Interfaces
 {

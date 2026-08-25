@@ -3,14 +3,13 @@
   <PropertyGroup>
     <TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <AssemblyName>AOSharp.Common</AssemblyName>
-    <RootNamespace>AOSharp.Common</RootNamespace>
+    <AssemblyName>SmokeLounge.AOtomation</AssemblyName>
+    <RootNamespace>SmokeLounge.AOtomation</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <ProjectReference Include="..\AOSharp.Common\AOSharp.Common.csproj" />
   </ItemGroup>
 </Project>

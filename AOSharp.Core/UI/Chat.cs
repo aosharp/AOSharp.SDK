@@ -8,6 +8,7 @@ using SmokeLounge.AOtomation.Messaging.Messages;
 using AOSharp.Common.SharedEventArgs;
 using SmokeLounge.AOtomation.Messaging.Messages.N3Messages;
 using SmokeLounge.AOtomation.Messaging.Messages.ChatMessages;
+using AOSharp.Core;
 
 namespace AOSharp.Core.UI
 {
@@ -63,7 +64,7 @@ namespace AOSharp.Core.UI
 
         internal static void OnFormatFeedback(FormatFeedbackMessage feedbackMsg)
         {
-            FeedbackReceived?.Invoke(feedbackMsg.FormattedMessage);
+            FeedbackReceived?.Invoke(feedbackMsg.GetFormattedMessage());
         }
 
         public static void WriteLine(object obj, ChatColor color = ChatColor.Gold)

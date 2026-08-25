@@ -24,5 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AOSharp.Common\AOSharp.Common.csproj" />
+    <ProjectReference Include="..\AOSharp.Common.Unmanaged\AOSharp.Common.Unmanaged.csproj" />
+    <ProjectReference Include="..\SmokeLounge.AOtomation\SmokeLounge.AOtomation.csproj" />
   </ItemGroup>
 </Project>

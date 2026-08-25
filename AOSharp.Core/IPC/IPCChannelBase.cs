@@ -10,7 +10,6 @@ using SmokeLounge.AOtomation.Messaging.Serialization.Serializers;
 using StreamWriter = SmokeLounge.AOtomation.Messaging.Serialization.StreamWriter;
 using StreamReader = SmokeLounge.AOtomation.Messaging.Serialization.StreamReader;
 using TypeInfo = SmokeLounge.AOtomation.Messaging.Serialization.TypeInfo;
-using AOSharp.Common.Unmanaged.Imports;
 using System.Reflection;
 using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 

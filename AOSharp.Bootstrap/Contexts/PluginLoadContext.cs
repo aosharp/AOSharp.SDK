@@ -1,3 +1,4 @@
+using AOSharp.Common.Runtime;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace AOSharp.Bootstrap.Contexts
                 name, _pluginPath ?? "(null)", AppDomain.CurrentDomain.BaseDirectory);
 
             RegisterPluginDirectory(_pluginPath);
+            AssemblyContentRoots.RegisterFromAssemblyPath(pluginPath);
 
             Resolving += (context, name) =>
             {
@@ -79,6 +81,9 @@ namespace AOSharp.Bootstrap.Contexts
                     if (path != null)
                     {
                         Log.Information("Resolving {AssemblyName} from {Path}", name.Name, path);
+                        if (context == this)
+                            return LoadFromAssemblyPathAndRegister(path);
+                        AssemblyContentRoots.RegisterFromAssemblyPath(path);
                         return context.LoadFromAssemblyPath(path);
                     }
 
@@ -120,20 +125,20 @@ namespace AOSharp.Bootstrap.Contexts
                 if (assemblyPath != null)
                 {
                     Log.Debug("[PluginLoadContext] Load {Name}: dependency resolver -> {Path}", assemblyName.Name, assemblyPath);
-                    return LoadFromAssemblyPath(assemblyPath);
+                    return LoadFromAssemblyPathAndRegister(assemblyPath);
                 }
 
                 string localPath = Path.Combine(_pluginPath, $"{assemblyName.Name}.dll");
                 if (File.Exists(localPath))
                 {
                     Log.Debug("[PluginLoadContext] Load {Name}: next to core dir -> {Path}", assemblyName.Name, localPath);
-                    return LoadFromAssemblyPath(localPath);
+                    return LoadFromAssemblyPathAndRegister(localPath);
                 }
 
                 Log.Debug("[PluginLoadContext] Load {Name}: resolver and {LocalPath} miss; probing disk", assemblyName.Name, localPath);
                 var probe = TryFindAssemblyPathOnDisk(assemblyName, this);
                 if (probe != null)
-                    return LoadFromAssemblyPath(probe);
+                    return LoadFromAssemblyPathAndRegister(probe);
 
                 Log.Error("[PluginLoadContext] Load returned null for {AssemblyName}. {Diagnostics}",
                     assemblyName.Name, BuildAssemblyProbeDiagnostics(assemblyName, this));
@@ -143,6 +148,12 @@ namespace AOSharp.Bootstrap.Contexts
                 Log.Error(ex, "[PluginLoadContext] Load {Name}: {Message}", assemblyName?.Name ?? "?", ex.Message);
             }
             return null;
+        }
+
+        private Assembly LoadFromAssemblyPathAndRegister(string assemblyPath)
+        {
+            AssemblyContentRoots.RegisterFromAssemblyPath(assemblyPath);
+            return LoadFromAssemblyPath(assemblyPath);
         }
 
         protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)

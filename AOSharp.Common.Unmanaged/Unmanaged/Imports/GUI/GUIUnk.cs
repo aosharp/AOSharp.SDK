@@ -1,5 +1,4 @@
 ﻿using AOSharp.Common.GameData;
-using SmokeLounge.AOtomation.Messaging.Messages;
 using System;
 using System.Runtime.InteropServices;
 
