@@ -143,7 +143,12 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization.Serializers.Custom
             scfu.VisualFlags = streamReader.ReadInt16();
             scfu.VisibleTitle = streamReader.ReadByte();
 
-            scfu.ScfuUnk1 = streamReader.ReadBytes(streamReader.ReadInt32());
+            var movementStatusLength = streamReader.ReadInt32();
+            var movementStatusBytes = streamReader.ReadBytes(movementStatusLength);
+            if (movementStatusLength >= CharMovementStatus.Size)
+                scfu.MovementStatus = CharMovementStatus.FromBytes(movementStatusBytes);
+            else
+                scfu.UnkMovementStatus = movementStatusBytes;
 
             if (scfu.Flags.HasFlag(SimpleCharFullUpdateFlags.HasHeadMesh))
                 scfu.HeadMesh = streamReader.ReadInt32();
@@ -452,8 +457,17 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization.Serializers.Custom
             streamWriter.WriteInt16(scfu.VisualFlags);
             streamWriter.WriteByte(scfu.VisibleTitle);
 
-            streamWriter.WriteInt32(scfu.ScfuUnk1.Length);
-            streamWriter.WriteBytes(scfu.ScfuUnk1);
+            if (scfu.MovementStatus.HasValue)
+            {
+                var movementStatusBytes = scfu.MovementStatus.Value.ToBytes();
+                streamWriter.WriteInt32(movementStatusBytes.Length);
+                streamWriter.WriteBytes(movementStatusBytes);
+            }
+            else if (scfu.UnkMovementStatus != null)
+            {
+                streamWriter.WriteInt32(scfu.UnkMovementStatus.Length);
+                streamWriter.WriteBytes(scfu.UnkMovementStatus);
+            }
 
             if (scfu.HeadMesh.HasValue)
             {

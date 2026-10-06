@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DoorFullUpdateMessage.cs" company="SmokeLounge">
+// <copyright file="DoorStatusUpdateMessage.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,7 +8,7 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the DoorFullUpdateMessage type.
+//   Defines the DoorStatusUpdateMessage type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -27,23 +27,33 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public DoorStatusUpdateMessage()
         {
             this.N3MessageType = N3MessageType.DoorStatusUpdate;
+            this.Version = 2;
+            this.Identities = new Identity[0];
         }
 
         #endregion
 
+        // Client ignores the rest of the message unless this is 2
         [AoMember(0)]
-        public int Unknown1 { get; set; }
+        public int Version { get; set; }
 
+        // Client treats this as true only when == 1
         [AoMember(1)]
-        public int Unknown2 { get; set; }
+        public byte FlagA { get; set; }
 
+        // 1 = play open, anything else = play close
         [AoMember(2)]
-        public byte Unknown3 { get; set; }
+        public byte Open { get; set; }
 
+        // Stat 195
         [AoMember(3)]
-        public short Unknown4 { get; set; }
+        public int Unknown195 { get; set; }
 
-        [AoMember(4, SerializeSize = ArraySizeType.X3F1)]
-        public int UnknownArray { get; set; }
+        // 1 sets Door_t+0x1d5
+        [AoMember(4)]
+        public byte FlagC { get; set; }
+
+        [AoMember(5, SerializeSize = ArraySizeType.X3F1)]
+        public Identity[] Identities { get; set; }
     }
 }

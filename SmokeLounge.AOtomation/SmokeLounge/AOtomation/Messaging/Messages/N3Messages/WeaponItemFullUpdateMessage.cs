@@ -12,49 +12,48 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
+    using AOSharp.Common.GameData;
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    // Serialized by WeaponItemFullUpdateSerializer. The client reads only the shared
+    // IDynelFullUpdate fields for this message (Gamecode.dll 0x100a2a85 -> 0x100a143b).
     [AoContract((int)N3MessageType.WeaponItemFullUpdate)]
-    public class WeaponItemFullUpdateMessage : N3Message
+    public class WeaponItemFullUpdateMessage : N3Message, IDynelFullUpdate
     {
         #region Constructors and Destructors
 
         public WeaponItemFullUpdateMessage()
         {
             this.N3MessageType = N3MessageType.WeaponItemFullUpdate;
+            this.Version = 11;
+            this.Rotation = Quaternion.Identity;
+            this.Stats = new GameTuple<Stat, int>[0];
+            this.Blob = new byte[0];
         }
 
         #endregion
 
-        #region AoMember Properties
+        public int Version { get; set; }
 
-        [AoMember(0)]
-        public int Unknown1 { get; set; }
-
-        [AoMember(1)]
         public Identity Owner { get; set; }
 
-        [AoMember(2)]
-        public int PlayfieldId { get; set; }
+        public Vector3 Position { get; set; }
 
-        [AoMember(3)]
+        public Quaternion Rotation { get; set; }
+
+        public int Playfield { get; set; }
+
         public Identity StateMachine { get; set; }
 
-        [AoMember(4)]
-        public short Unknown2 { get; set; }
+        public byte InventoryId { get; set; }
 
-        [AoMember(5, SerializeSize = ArraySizeType.X3F1)]
+        public byte CurrBodyLocation { get; set; }
+
         public GameTuple<Stat, int>[] Stats { get; set; }
 
-        [AoMember(6)]
-        public int Unknown3 { get; set; }
-
-        #endregion
+        public byte[] Blob { get; set; }
     }
 }

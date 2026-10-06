@@ -59,8 +59,8 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(8, SerializeSize = ArraySizeType.X3F1)]
         public GameTuple<Stat, int>[] Stats { get; set; }
 
-        [AoMember(9)]
-        public int Unknown6 { get; set; }
+        [AoMember(9, SerializeSize = ArraySizeType.Int32)]
+        public byte[] UnknownData { get; set; }
 
         [AoMember(10)]
         public int Unknown7 { get; set; }
@@ -69,7 +69,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public int Unknown8 { get; set; }
 
         [AoMember(12, SerializeSize = ArraySizeType.X3F1)]
-        public int[] UnknownArray { get; set; }
+        public Identity[] UnknownArray { get; set; }
 
         [AoMember(13)]
         public int Unknown9 { get; set; }

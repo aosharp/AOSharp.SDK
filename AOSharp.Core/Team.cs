@@ -67,7 +67,7 @@ namespace AOSharp.Core
         {
             Network.Send(new CharacterActionMessage()
             {
-                Action = CharacterActionType.TeamRequestResponse,
+                Action = CharacterActionType.TeamRequestReply,
                 Target = target,
                 Parameter2 = (int)TeamRequestResponseAction.Decline
             });

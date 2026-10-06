@@ -121,8 +121,14 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization.Serializers
             Expression valueExpression, 
             PropertyMetaData propertyMetaData)
         {
+            // The serializer lambda takes object, so struct values (e.g. Identity[] elements) must be boxed
+            if (valueExpression.Type.IsValueType)
+            {
+                valueExpression = Expression.Convert(valueExpression, typeof(object));
+            }
+
             var invokeExp = Expression.Invoke(
-                this.serializerExpression.Value, 
+                this.serializerExpression.Value,
                 new[] { streamWriterExpression, serializationContextExpression, valueExpression });
             return invokeExp;
         }

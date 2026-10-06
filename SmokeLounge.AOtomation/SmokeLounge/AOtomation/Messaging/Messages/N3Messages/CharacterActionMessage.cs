@@ -17,6 +17,7 @@ using AOSharp.Common.GameData;
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
     using SmokeLounge.AOtomation.Messaging.GameData;
+    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
     [AoContract((int)N3MessageType.CharacterAction)]
@@ -27,6 +28,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public CharacterActionMessage()
         {
             this.N3MessageType = N3MessageType.CharacterAction;
+            this.Unknown2 = string.Empty;
         }
 
         #endregion
@@ -48,8 +50,8 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(4)]
         public int Parameter2 { get; set; }
 
-        [AoMember(5)]
-        public short Unknown2 { get; set; }
+        [AoMember(5, SerializeSize = ArraySizeType.Int16)]
+        public string Unknown2 { get; set; }
 
         #endregion
     }

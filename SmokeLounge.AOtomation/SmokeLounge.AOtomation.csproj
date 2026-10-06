@@ -8,8 +8,22 @@
     <LangVersion>latest</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
+
+    <!-- NuGet (override PackageId via -p:SmokeLoungePackageId=...) -->
+    <IsPackable>true</IsPackable>
+    <PackageId Condition="'$(SmokeLoungePackageId)' != ''">$(SmokeLoungePackageId)</PackageId>
+    <PackageId Condition="'$(PackageId)' == ''">SmokeLounge.AOtomation</PackageId>
+    <Version>1.0.9</Version>
+    <Authors>AOSharp</Authors>
+    <Description>AO messaging and serialization types (SmokeLounge.AOtomation).</Description>
+    <PackageTags>AOSharp;AnarchyOnline;SmokeLounge;Messaging</PackageTags>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\nupkgs</PackageOutputPath>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Packs as a PackageReference dependency on AOSharp.Common -->
     <ProjectReference Include="..\AOSharp.Common\AOSharp.Common.csproj" />
   </ItemGroup>
 </Project>

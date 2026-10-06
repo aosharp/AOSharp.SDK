@@ -40,16 +40,18 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(1)]
         public Identity Team { get; set; }
 
+        // Raid group index (0-5)
         [AoMember(2)]
-        public uint Unknown1 { get; set; }
+        public int RaidGroupIndex { get; set; }
 
+        // Passed to the raid view alongside the name; probably level
         [AoMember(3)]
         public int Unknown2 { get; set; }
 
         [AoMember(4)]
-        public int Unknown3 { get; set; }
+        public short Profession { get; set; }
 
-        [AoMember(5, SerializeSize = ArraySizeType.Int16)]
+        [AoMember(5, SerializeSize = ArraySizeType.Int32)]
         public string Name { get; set; }
 
         #endregion

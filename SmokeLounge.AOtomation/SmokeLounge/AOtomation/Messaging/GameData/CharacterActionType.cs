@@ -8,6 +8,13 @@
         TeamKickMember = 0x16,
         LeaveTeam = 0x18,
         TeamMemberLeft = 0x20,
+        TeamEvent = 0x15,
+        TeamLevel = 0x1B,
+        TeamLeaderChanged = 0x23,
+        TeamBonusReceived = 0x2B,
+        TeamInviteTargetLevelTooLow = 0xA8,
+        TeamInviteTargetLevelTooHigh = 0xA9,
+        [System.Obsolete("0x23 is a leader change, not a request reply. Use TeamLeaderChanged; reply with TeamRequestReply.")]
         AcceptTeamRequest = 0x23,
         RemoveFriendlyNano = 0x41,
         UseItemOnItem = 0x51,
@@ -49,6 +56,7 @@
         TeamRequestInvite = 0x1A,
         Split = 0x22,
         DuelUpdate = 0x106,
+        [System.Obsolete("0x23 is a leader change, not a request reply. Use TeamLeaderChanged; reply with TeamRequestReply.")]
         TeamRequestResponse = 0x23,
         SplitItem = 0x34,
         QueuePerk = 0x50,

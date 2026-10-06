@@ -36,11 +36,32 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public Identity Requestor { get; set; }
 
         [AoMember(1)]
+        [AoFlags("flag")]
         public byte Unknown1 { get; set; }
 
         [AoMember(2, SerializeSize = ArraySizeType.Int16)]
         public string Name { get; set; }
 
+        // Only present when Unknown1 != 0
+        [AoMember(3)]
+        [AoUsesFlags("flag", typeof(TeamInviteExtra), FlagsCriteria.HasAny, 0xFF)]
+        public TeamInviteExtra Extra { get; set; }
+
         #endregion
+
+        public class TeamInviteExtra
+        {
+            [AoMember(0)]
+            public int Unknown1 { get; set; }
+
+            [AoMember(1)]
+            public byte Unknown2 { get; set; }
+
+            [AoMember(2)]
+            public short Unknown3 { get; set; }
+
+            [AoMember(3)]
+            public ushort Unknown4 { get; set; }
+        }
     }
 }

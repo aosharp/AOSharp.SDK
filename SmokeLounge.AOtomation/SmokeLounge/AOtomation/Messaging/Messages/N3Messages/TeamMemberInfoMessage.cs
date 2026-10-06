@@ -37,16 +37,16 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public Identity Character { get; set; }
 
         [AoMember(1)]
-        public int Unknown2 { get; set; }
+        public int CurrentNano { get; set; }
 
         [AoMember(2)]
-        public int Unknown4 { get; set; }
+        public int MaxNanoEnergy { get; set; }
 
         [AoMember(3)]
-        public int Unknown6 { get; set; }
+        public int MaxHealth { get; set; }
 
         [AoMember(4)]
-        public int Unknown8 { get; set; }
+        public int Health { get; set; }
 
         #endregion
     }

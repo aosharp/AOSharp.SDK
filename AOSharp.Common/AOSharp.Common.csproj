@@ -9,6 +9,19 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <BaseOutputPath>$(MSBuildProjectDirectory)\..\bin</BaseOutputPath>
+
+    <!-- NuGet (override PackageId via -p:AOSharpCommonPackageId=... if needed) -->
+    <IsPackable>true</IsPackable>
+    <PackageId Condition="'$(AOSharpCommonPackageId)' != ''">$(AOSharpCommonPackageId)</PackageId>
+    <PackageId Condition="'$(PackageId)' == ''">AOSharp.Common</PackageId>
+    <Version>1.0.9</Version>
+    <Authors>AOSharp</Authors>
+    <Description>Shared AOSharp types and helpers (GameData, MappingAttributes, native helpers).</Description>
+    <PackageTags>AOSharp;AnarchyOnline</PackageTags>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\nupkgs</PackageOutputPath>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
