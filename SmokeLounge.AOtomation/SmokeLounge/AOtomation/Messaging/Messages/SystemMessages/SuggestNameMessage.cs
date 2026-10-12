@@ -14,9 +14,12 @@
 
 namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The name the server suggests: a 16-bit length, then its bytes; 0, or 0x8000 and above, is an empty name (the read
+    /// does not fail). Read by SuggestNameSerializer.
+    /// </summary>
     [AoContract((int)SystemMessageType.SuggestName)]
     public class SuggestNameMessage : SystemMessage
     {
@@ -31,7 +34,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 
         #region AoMember Properties
 
-        [AoMember(0, SerializeSize = ArraySizeType.Int16)]
+        [AoMember(0)]
         public string Name { get; set; }
 
         #endregion

@@ -12,14 +12,14 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
-    using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// Creates a character: a CharacterData_t (version 4, id 0, its CharacterInfo_c carrying the choices), then the
+    /// starter area. Written and read by CreateCharacterSerializer.
+    /// </summary>
     [AoContract((int)SystemMessageType.CreateCharacter)]
     public class CreateCharacterMessage : SystemMessage
     {
@@ -28,49 +28,17 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         public CreateCharacterMessage()
         {
             this.SystemMessageType = SystemMessageType.CreateCharacter;
+            this.Character = new GameData.LoginCharacterInfo();
         }
 
         #endregion
 
         #region AoMember Properties
 
-        [AoMember(0, IsFixedSize = true, FixedSizeLength = 49)]
-        public byte[] Unknown1 { get; set; }
+        [AoMember(0)]
+        public GameData.LoginCharacterInfo Character { get; set; }
 
-        [AoMember(1, SerializeSize = ArraySizeType.Int32)]
-        public string Name { get; set; }
-
-        [AoMember(2)]
-        public Breed Breed { get; set; }
-
-        [AoMember(3)]
-        public Gender Gender { get; set; }
-
-        [AoMember(4)]
-        public Profession Profession { get; set; }
-
-        [AoMember(5)]
-        public int Level { get; set; }
-
-        [AoMember(6, SerializeSize = ArraySizeType.Int32)]
-        public string AreaName { get; set; }
-
-        [AoMember(7)]
-        public int Unknown2 { get; set; }
-
-        [AoMember(8)]
-        public int Unknown3 { get; set; }
-
-        [AoMember(9)]
-        public int HeadMesh { get; set; }
-
-        [AoMember(10)]
-        public int MonsterScale { get; set; }
-
-        [AoMember(11)]
-        public Fatness Fatness { get; set; }
-
-        [AoMember(12)]
+        [AoMember(1)]
         public StarterArea StarterArea { get; set; }
 
         #endregion

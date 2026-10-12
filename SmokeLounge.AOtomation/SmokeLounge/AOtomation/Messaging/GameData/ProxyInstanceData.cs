@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NanoEffect.cs" company="SmokeLounge">
+// <copyright file="ProxyInstanceData.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,61 +8,48 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the NanoEffect type.
+//   Defines the ProxyInstanceData type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.GameData
 {
+    using AOSharp.Common.GameData;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
-    public class NanoEffect
+    /// <summary>
+    /// The block a 0xC77B proxy instance carries before its dynels.
+    /// </summary>
+    public class ProxyInstanceData
     {
         #region AoMember Properties
 
         [AoMember(0)]
-        public Identity Effect { get; set; }
-
-        [AoMember(1)]
         public int Unknown1 { get; set; }
 
+        [AoMember(1)]
+        public Identity Unknown2 { get; set; }
+
         [AoMember(2)]
-        public int CriterionCount { get; set; }
-
-        [AoMember(3)]
-        public int Hits { get; set; }
-
-        [AoMember(4)]
-        public int Delay { get; set; }
-
-        [AoMember(5)]
-        public int Unknown2 { get; set; }
-
-        [AoMember(6)]
         public int Unknown3 { get; set; }
 
+        [AoMember(3)]
+        public Vector3 Unknown4 { get; set; }
+
+        [AoMember(4)]
+        public int Unknown5 { get; set; }
+
+        [AoMember(5)]
+        public int Unknown6 { get; set; }
+
+        [AoMember(6)]
+        public float Unknown7 { get; set; }
+
         [AoMember(7)]
-        public int GfxValue { get; set; }
+        public int Unknown8 { get; set; }
 
         [AoMember(8)]
-        public int GfxLife { get; set; }
-
-        [AoMember(9)]
-        public int GfxSize { get; set; }
-
-        [AoMember(10)]
-        public int GfxRed { get; set; }
-
-        [AoMember(11)]
-        public int GfxGreen { get; set; }
-
-        [AoMember(12)]
-        public int GfxBlue { get; set; }
-
-        [AoMember(13)]
-        public int GfxFade { get; set; }
+        public int Unknown9 { get; set; }
 
         #endregion
     }

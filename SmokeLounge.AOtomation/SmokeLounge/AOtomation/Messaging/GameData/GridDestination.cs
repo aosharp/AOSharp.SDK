@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MissionItemReward.cs" company="SmokeLounge">
+// <copyright file="GridDestination.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,31 +8,35 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the MissionItemReward type.
+//   Defines the GridDestination type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using AOSharp.Common.GameData;
+
 namespace SmokeLounge.AOtomation.Messaging.GameData
 {
-    using AOSharp.Common.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
-    public class MissionItemReward
+    /// <summary>A GridDestinationList_t entry of an <see cref="InfoPacket"/>.</summary>
+    public class GridDestination
     {
         #region AoMember Properties
 
         [AoMember(0)]
-        public int LowId { get; set; }
+        public int Unknown1 { get; set; }
 
         [AoMember(1)]
-        public int HighId { get; set; }
+        public Identity Identity { get; set; }
 
         [AoMember(2)]
-        public int Ql { get; set; }
+        public string Name { get; set; }
 
         [AoMember(3)]
-        public int Unk { get; set; }
+        public int Unknown2 { get; set; }
+
+        [AoMember(4)]
+        public int Unknown3 { get; set; }
 
         #endregion
     }

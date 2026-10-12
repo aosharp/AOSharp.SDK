@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Mesh.cs" company="SmokeLounge">
+// <copyright file="SpellExpression.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,7 +8,7 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the Mesh type.
+//   Defines the SpellExpression type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -16,54 +16,46 @@ namespace SmokeLounge.AOtomation.Messaging.GameData
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
-    public class AnimationEffect
+    /// <summary>
+    /// A node of a spell's expression, by <see cref="Kind"/>: 1 a value, 2 a stat and a flag, 3 (compound) and 4
+    /// (function) an operator with two nodes under it. Any other kind fails the read.
+    /// </summary>
+    public class SpellExpression
     {
+        #region Constants
+
+        public const int ValueKind = 1;
+
+        public const int StatKind = 2;
+
+        public const int CompoundKind = 3;
+
+        public const int FunctionKind = 4;
+
+        #endregion
+
         #region AoMember Properties
 
         [AoMember(0)]
-        public int IdentityType { get; set; }
+        public int Kind { get; set; }
 
         [AoMember(1)]
-        public int NanoId { get; set; }
+        public float Value { get; set; }
 
         [AoMember(2)]
-        public int NanoInstance { get; set; }
+        public int Stat { get; set; }
 
         [AoMember(3)]
-        public int Time1 { get; set; }
+        public int Flag { get; set; }
 
         [AoMember(4)]
-        public int Time2 { get; set; }
+        public int Operator { get; set; }
 
         [AoMember(5)]
-        public int Unknown1 { get; set; }
+        public SpellExpression Left { get; set; }
 
         [AoMember(6)]
-        public int Unknown2 { get; set; }
-
-        [AoMember(7)]
-        public int Unknown3 { get; set; }
-
-        [AoMember(8)]
-        public int Unknown4 { get; set; }
-
-        [AoMember(9)]
-        public int Unknown5 { get; set; }
-
-        [AoMember(10)]
-        public int Unknown6 { get; set; }
-
-        [AoMember(11)]
-        public int Unknown7 { get; set; }
-
-        [AoMember(12)]
-        public int Unknown8 { get; set; }
-
-        [AoMember(13)]
-        public int VisualDataId { get; set; }
-
-        [AoMember(14)]
-        public int Unknown9 { get; set; }
+        public SpellExpression Right { get; set; }
 
         #endregion
     }

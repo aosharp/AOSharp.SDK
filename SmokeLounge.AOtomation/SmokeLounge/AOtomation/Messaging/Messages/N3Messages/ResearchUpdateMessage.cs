@@ -12,14 +12,15 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// ResearchUpdateIIR: a byte, then research lines (a perk id and three ints) until a perk id of 0. Read and
+    /// written by ResearchUpdateSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.ResearchUpdate)]
     public class ResearchUpdateMessage : N3Message
     {
@@ -28,6 +29,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public ResearchUpdateMessage()
         {
             this.N3MessageType = N3MessageType.ResearchUpdate;
+            this.ResearchLines = new ResearchLine[0];
         }
 
         #endregion
@@ -37,11 +39,8 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(0)]
         public byte Unknown1 { get; set; }
 
-        [AoMember(1, FixedSizeLength = 54, IsFixedSize = true, SerializeSize = ArraySizeType.NoSerialization)]
-        public ResearchLine[] ResearchLine { get; set; }
-     
         [AoMember(1)]
-        public int Unknown2 { get; set; }
+        public ResearchLine[] ResearchLines { get; set; }
 
         #endregion
     }

@@ -84,10 +84,13 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization
             reader.Position = 0;
             serializationContext = new SerializationContext(this.serializerResolver);
 
+            var header = (Header)this.headerSerializer.Deserialize(reader, serializationContext);
+            var body = (MessageBody)serializer.Deserialize(reader, serializationContext);
             return new Message
             {
-                Header = (Header)this.headerSerializer.Deserialize(reader, serializationContext),
-                Body = (MessageBody)serializer.Deserialize(reader, serializationContext),
+                Header = header,
+                Body = body,
+                ReadFailed = reader.Failed,
                 RawPacket = reader.ReadAll()
             };
         }

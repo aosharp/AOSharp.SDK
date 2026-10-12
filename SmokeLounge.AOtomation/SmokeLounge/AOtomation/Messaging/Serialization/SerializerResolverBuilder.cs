@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SerializerResolverBuilder.cs" company="SmokeLounge">
 //   Copyright � 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
@@ -22,6 +22,7 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization
     using SmokeLounge.AOtomation.Messaging.GameData;
     using SmokeLounge.AOtomation.Messaging.Messages.ChatMessages;
     using SmokeLounge.AOtomation.Messaging.Messages.N3Messages;
+    using SmokeLounge.AOtomation.Messaging.Messages.SystemMessages;
     using SmokeLounge.AOtomation.Messaging.Serialization.Serializers;
     using SmokeLounge.AOtomation.Messaging.Serialization.Serializers.Custom;
 
@@ -74,6 +75,24 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization
             this.serializers.TryAdd(typeof(PrivateGroupMessage), new PrivateGroupMessageSerializer());
             this.serializers.TryAdd(typeof(DoorFullUpdateMessage), new DoorFullUpdateSerializer());
             this.serializers.TryAdd(typeof(WeaponItemFullUpdateMessage), new WeaponItemFullUpdateSerializer());
+            this.serializers.TryAdd(typeof(ActionMessage), new ActionSerializer());
+            this.serializers.TryAdd(typeof(SocialActionCmdMessage), new SocialActionCmdSerializer());
+            this.serializers.TryAdd(typeof(SpellListMessage), new SpellListSerializer());
+            this.serializers.TryAdd(typeof(PlayfieldAnarchyFMessage), new PlayfieldAnarchyFSerializer());
+            this.serializers.TryAdd(typeof(CorpseFullUpdateMessage), new CorpseFullUpdateSerializer());
+            this.serializers.TryAdd(typeof(CreateCharacterMessage), new CreateCharacterSerializer());
+            this.serializers.TryAdd(typeof(SuggestNameMessage), new SuggestNameSerializer());
+            this.serializers.TryAdd(typeof(CharacterListMessage), new CharacterListSerializer());
+            this.serializers.TryAdd(typeof(QuestAlternativeMessage), new QuestAlternativeSerializer());
+            this.serializers.TryAdd(typeof(QuestMessage), new QuestSerializer());
+            this.serializers.TryAdd(typeof(QuestFullUpdateMessage), new QuestFullUpdateSerializer());
+            this.serializers.TryAdd(typeof(InfoPacketMessage), new InfoPacketSerializer());
+            this.serializers.TryAdd(typeof(KnuBotCloseChatWindowMessage), new KnuBotCloseChatWindowSerializer());
+            this.serializers.TryAdd(typeof(KnuBotAppendTextMessage), new KnuBotAppendTextSerializer());
+            this.serializers.TryAdd(typeof(KnuBotAnswerListMessage), new KnuBotAnswerListSerializer());
+            this.serializers.TryAdd(typeof(KnuBotOpenChatWindowMessage), new KnuBotOpenChatWindowSerializer());
+            this.serializers.TryAdd(typeof(RaidMessage), new RaidSerializer());
+            this.serializers.TryAdd(typeof(ResearchUpdateMessage), new ResearchUpdateSerializer());
         }
 
         #endregion

@@ -16,6 +16,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The character could not be created: one int, the reason the client hands to its create window.
+    /// </summary>
     [AoContract((int)SystemMessageType.NameInUse)]
     public class NameInUseMessage : SystemMessage
     {
@@ -24,7 +27,6 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         public NameInUseMessage()
         {
             this.SystemMessageType = SystemMessageType.NameInUse;
-            this.Unknown = 0x0000001E;
         }
 
         #endregion
@@ -32,7 +34,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         #region AoMember Properties
 
         [AoMember(0)]
-        public int Unknown { get; set; }
+        public int Reason { get; set; }
 
         #endregion
     }

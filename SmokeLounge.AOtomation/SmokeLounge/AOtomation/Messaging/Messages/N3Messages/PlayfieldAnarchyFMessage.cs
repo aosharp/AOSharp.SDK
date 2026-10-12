@@ -12,14 +12,20 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
+    using AOSharp.Common.GameData;
+
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The playfield the character enters (n3PlayfieldFullUpdateIIR_t, then PlayfieldAnarchyFIIR_t's world block): a
+    /// version, the character's position, from version 2 the playfield proxy, from version 4 an object inline, then
+    /// the playfield's world X and Z. The inline object is a playfield record, a generated building or a proxy
+    /// instance; any other type fails the read. Live servers leave the inline identity off (and the world block, in
+    /// older messages) when there is no room for it. Read and written by PlayfieldAnarchyFSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.PlayfieldAnarchyF)]
     public class PlayfieldAnarchyFMessage : N3Message
     {
@@ -29,8 +35,10 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         {
             this.N3MessageType = N3MessageType.PlayfieldAnarchyF;
             this.Unknown = 0x00;
-            this.Unknown1 = 0x00000004;
-            this.Unknown2 = 0x61;
+            this.Version = 4;
+            this.PlayfieldProxyVersion = (byte)'a';
+            this.HasInlineIdentity = true;
+            this.HasWorld = true;
         }
 
         #endregion
@@ -38,14 +46,16 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         #region AoMember Properties
 
         [AoMember(0)]
-        public int Unknown1 { get; set; }
+        public int Version { get; set; }
 
         [AoMember(1)]
         public Vector3 CharacterCoordinates { get; set; }
 
+        /// <summary>From version 2: 'a'; any other fails the read.</summary>
         [AoMember(2)]
-        public byte Unknown2 { get; set; }
+        public byte PlayfieldProxyVersion { get; set; }
 
+        /// <summary>The playfield.</summary>
         [AoMember(3)]
         public Identity PlayfieldId1 { get; set; }
 
@@ -55,66 +65,41 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(5)]
         public int SG { get; set; }
 
+        /// <summary>Where the character leaves the playfield to.</summary>
         [AoMember(6)]
         public Identity ProxyId { get; set; }
 
-        [AoFlags("flags")]
+        /// <summary>From version 4: whether the inline identity was sent.</summary>
         [AoMember(7)]
-        public int UnknownIdType { get; set; }
+        public bool HasInlineIdentity { get; set; }
 
+        /// <summary>The inline object's identity; 0:0, none.</summary>
         [AoMember(8)]
-        public int UnknownIdInstance { get; set; }
+        public Identity InlineIdentity { get; set; }
 
+        /// <summary>The int every inline object starts with after its identity.</summary>
         [AoMember(9)]
-        public int Unknown5 { get; set; }
+        public int InlineVersion { get; set; }
 
         [AoMember(10)]
-        public int Unknown6 { get; set; }
+        public PlayfieldRecord PlayfieldRecord { get; set; }
 
-        [AoUsesFlags("flags", typeof(UnknownStruct1), FlagsCriteria.EqualsToAny, new[] { 0xC77B })]
         [AoMember(11)]
-        public UnknownStruct1 Unknown7 { get; set; }
+        public AcgBuildingGenerator BuildingGenerator { get; set; }
 
-        [AoUsesFlags("flags", typeof(PlayfieldDynelInfo[]), FlagsCriteria.EqualsToAny, new[] { 0xC77B, 0xC77D })]
-        [AoMember(12, SerializeSize=ArraySizeType.Int32)]
-        public PlayfieldDynelInfo[] Dynels { get; set; }
+        [AoMember(12)]
+        public ProxyInstance ProxyInstance { get; set; }
+
+        /// <summary>Whether the world X and Z were sent.</summary>
+        [AoMember(13)]
+        public bool HasWorld { get; set; }
+
+        [AoMember(14)]
+        public int PlayfieldX { get; set; }
+
+        [AoMember(15)]
+        public int PlayfieldZ { get; set; }
 
         #endregion
-
-        public class UnknownStruct1
-        {
-            [AoMember(0)]
-            public int Unknown1 { get; set; }
-            [AoMember(1)]
-            public Identity Unknown2 { get; set; }
-            [AoMember(2)]
-            public int Unknown3 { get; set; }
-            [AoMember(3)]
-            public Vector3 Unknown4 { get; set; }
-            [AoMember(4)]
-            public int Unknown5 { get; set; }
-            [AoMember(5)]
-            public int Unknown6 { get; set; }
-            [AoMember(6)]
-            public float Unknown7 { get; set; }
-            [AoMember(7)]
-            public int Unknown8 { get; set; }
-            [AoMember(8)]
-            public int Unknown9 { get; set; }
-        }
-
-        public class PlayfieldDynelInfo
-        {
-            [AoMember(0)]
-            public IdentityType IdentityType { get; set; }
-            [AoMember(1)]
-            public int Unknown1 { get; set; }
-            [AoMember(2)]
-            public int Unknown2 { get; set; }
-            [AoMember(3)]
-            public int Unknown3 { get; set; }
-            [AoMember(4)]
-            public int Instance { get; set; }
-        }
     }
 }

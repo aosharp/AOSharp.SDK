@@ -12,147 +12,160 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using AOSharp.Common.GameData;
+
 namespace SmokeLounge.AOtomation.Messaging.GameData
 {
-    using AOSharp.Common.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
+    using System.Collections.Generic;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The client's Quest_t (0xf8 bytes), versions 7 to 15: each later field is read only from the version that added
+    /// it, taking the default otherwise. Unknowns are named by their offset in it; those the client reads and does
+    /// not store, by their order.
+    /// </summary>
     public class Quest
     {
+        #region Constructors and Destructors
+
+        public Quest()
+        {
+            this.Version = 15;
+            this.Name = string.Empty;
+            this.Description = string.Empty;
+            this.Reward = new QuestReward();
+            this.Actions = new List<QuestActionInfo>();
+            this.Receivers = new List<Identity>();
+            this.Receivers2 = new List<Identity>();
+            this.Ints60 = new List<int>();
+            this.Ints50 = new List<int>();
+            this.PairsC8 = new List<KeyValuePair<Identity, int>>();
+            this.Blocks = new List<QuestBlock>();
+            this.UnknownA8 = 6;
+        }
+
+        #endregion
+
         #region AoMember Properties
 
         [AoMember(0)]
-        public Identity QuestId { get; set; }
+        public Identity Identity { get; set; }
 
         [AoMember(1)]
+        public int Version { get; set; }
+
+        /// <summary>After the version; not stored by the client.</summary>
+        [AoMember(2)]
         public int Unknown1 { get; set; }
 
-        [AoMember(2)]
+        /// <summary>After <see cref="Unknown1"/>; not stored by the client.</summary>
+        [AoMember(3)]
         public int Unknown2 { get; set; }
 
-        [AoMember(3)]
-        public int Unknown3 { get; set; }
-
+        /// <summary>Bit 8: a team mission; bit 10: the client does not let it be deleted.</summary>
         [AoMember(4)]
-        public int Unknown4 { get; set; }
+        public int Flags { get; set; }
 
-        [AoMember(5, SerializeSize = ArraySizeType.NullTerminated)]
-        public string ShortInfo { get; set; }
+        public bool IsTeamMission
+        {
+            get
+            {
+                return (this.Flags >> 8 & 1) != 0;
+            }
+        }
 
-        [AoMember(6, SerializeSize = ArraySizeType.Int32)]
-        public string LongInfo { get; set; }
+        public bool CanDelete
+        {
+            get
+            {
+                return (this.Flags >> 10 & 1) == 0;
+            }
+        }
+
+        /// <summary>At most 31 characters (the client's field is 32 bytes).</summary>
+        [AoMember(5)]
+        public string Name { get; set; }
+
+        /// <summary>1 to 4096 characters.</summary>
+        [AoMember(6)]
+        public string Description { get; set; }
 
         [AoMember(7)]
-        public Identity UnknownId1 { get; set; }
+        public Identity Identity38 { get; set; }
 
         [AoMember(8)]
-        public int Unknown5 { get; set; }
+        public QuestReward Reward { get; set; }
 
         [AoMember(9)]
-        public int Unknown6 { get; set; }
+        public Identity Identity40 { get; set; }
 
         [AoMember(10)]
-        public int Unknown7 { get; set; }
+        public int Icon { get; set; }
 
         [AoMember(11)]
-        public int Unknown8 { get; set; }
+        public int Unknown70 { get; set; }
 
         [AoMember(12)]
-        public int Unknown9 { get; set; }
+        public int Unknown74 { get; set; }
 
         [AoMember(13)]
-        public int Unknown10 { get; set; }
+        public List<QuestActionInfo> Actions { get; set; }
 
-        [AoMember(14, SerializeSize = ArraySizeType.X3F1)]
-        public MissionItemReward[] MissionItemData { get; set; }
+        /// <summary>The first identity list; the client merges it with <see cref="Receivers2"/>.</summary>
+        [AoMember(14)]
+        public List<Identity> Receivers { get; set; }
 
+        /// <summary>Masked to 0x7ffffff.</summary>
         [AoMember(15)]
-        public int Unknown11 { get; set; }
+        public List<int> Ints60 { get; set; }
 
+        /// <summary>Masked to 0x7ffffff.</summary>
         [AoMember(16)]
-        public int Unknown12 { get; set; }
+        public List<int> Ints50 { get; set; }
 
+        /// <summary>After <see cref="Ints50"/>; not stored by the client.</summary>
         [AoMember(17)]
-        public int Unknown13 { get; set; }
+        public List<QuestBlock> Blocks { get; set; }
 
-        [AoMember(18, SerializeSize = ArraySizeType.NoSerialization, FixedSizeLength = 4, IsFixedSize = true)]
-        public string UnknownHash1 { get; set; }
-
-        [AoMember(15)]
-        public int Unknown14 { get; set; }
-
-        [AoMember(16)]
-        public int Unknown15 { get; set; }
-
-        [AoMember(17)]
-        public int Unknown16 { get; set; }
-
+        /// <summary>From version 8 (6 before).</summary>
         [AoMember(18)]
-        public int Unknown17 { get; set; }
+        public int UnknownA8 { get; set; }
 
+        /// <summary>From version 9.</summary>
         [AoMember(19)]
-        public int Unknown18 { get; set; }
+        public List<Identity> Receivers2 { get; set; }
 
+        /// <summary>From version 10.</summary>
         [AoMember(20)]
-        public Identity UnknownId2 { get; set; }
+        public int Unknown4C { get; set; }
 
+        /// <summary>From version 11.</summary>
         [AoMember(21)]
-        public int MissionIconId { get; set; }
+        public int UnknownB0 { get; set; }
 
+        /// <summary>From version 12.</summary>
         [AoMember(22)]
-        public int Unknown20 { get; set; }
+        public Identity IdentityB4 { get; set; }
 
+        /// <summary>From version 12.</summary>
         [AoMember(23)]
-        public int Unknown21 { get; set; }
+        public int UnknownBC { get; set; }
 
-        [AoMember(24, SerializeSize = ArraySizeType.X3F1)]
-        public QuestActionInfo[] QuestActions { get; set; }
+        /// <summary>From version 12.</summary>
+        [AoMember(24)]
+        public int UnknownC0 { get; set; }
 
-        [AoMember(25, SerializeSize = ArraySizeType.X3F1)]
-        public Identity[] PlayerIds { get; set; }
+        /// <summary>From version 13.</summary>
+        [AoMember(25)]
+        public List<KeyValuePair<Identity, int>> PairsC8 { get; set; }
 
-        [AoMember(26, SerializeSize = ArraySizeType.Int32)]
-        public int[] UnknownArray1 { get; set; }
+        /// <summary>From version 14.</summary>
+        [AoMember(26)]
+        public int UnknownD4 { get; set; }
 
-        [AoMember(27, SerializeSize = ArraySizeType.Int32)]
-        public int[] UnknownArray2 { get; set; }
-
-        [AoMember(28, SerializeSize = ArraySizeType.Int32)]
-        public CharacterInfo[] CharacterInfos { get; set; }
-
-        [AoMember(29)]
-        public int Unknown22 { get; set; }
-
-        [AoMember(30, SerializeSize = ArraySizeType.X3F1)]
-        public Identity[] PlayerIds2 { get; set; }
-
-        [AoMember(31)]
-        public int Unknown23 { get; set; }
-
-        [AoMember(32)]
-        public int Unknown24 { get; set; }
-
-        [AoMember(33)]
-        public Identity UnknownId3 { get; set; }
-
-        [AoMember(34)]
-        public int Unknown25 { get; set; }
-
-        [AoMember(35)]
-        public int Unknown26 { get; set; }
-
-        [AoMember(36, SerializeSize = ArraySizeType.Int32)]
-        public QuestIdentity[] QuestIdentities { get; set; }
-
-        [AoMember(37)]
-        public int Unknown27 { get; set; }
-
-        [AoMember(38, SerializeSize = ArraySizeType.X3F1)]
-        public Identity[] FactionInfos { get; set; }
-
-        [AoMember(39)]
-        public byte Unknown28 { get; set; }
+        /// <summary>From version 15; null before.</summary>
+        [AoMember(27)]
+        public List<Identity> IdentitiesD8 { get; set; }
 
         #endregion
     }

@@ -78,10 +78,10 @@ namespace AOSharp.Core
 
         public void Delete()
         {
+            // QuestIIR_t as the client sends it to delete a mission: version 1, action 0, the quest.
             Network.Send(new QuestMessage()
             {
-                Action = QuestAction.Delete,
-                Mission = Identity
+                Quest = Identity
             });
         }
 

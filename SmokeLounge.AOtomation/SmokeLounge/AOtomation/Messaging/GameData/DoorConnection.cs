@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="InfoPacketType.cs" company="SmokeLounge">
+// <copyright file="DoorConnection.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,26 +8,27 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the InfoPacketType type.
+//   Defines the DoorConnection type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
+namespace SmokeLounge.AOtomation.Messaging.GameData
 {
-    public enum InfoPacketType : byte
+    using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
+
+    /// <summary>
+    /// A room's door: the zone it links to and its packed position and rotation.
+    /// </summary>
+    public class DoorConnection
     {
-        Character = 0x40, // 0100 0000
+        #region AoMember Properties
 
-        CharacterOrg = 0x41, // 0100 0001
+        [AoMember(0)]
+        public short ZoneLink { get; set; }
 
-        CharacterOrgSite = 0x43, // 0100 0011
+        [AoMember(1)]
+        public short PosRot { get; set; }
 
-        CharacterOrgSiteTower = 0x47, // 0100 0111
-
-        Monster = 0x50, // 0101 0000
-
-        Tower = 0x54, // 0101 0100
-
-        ControlTower = 0x5C // 0101 1100
+        #endregion
     }
 }

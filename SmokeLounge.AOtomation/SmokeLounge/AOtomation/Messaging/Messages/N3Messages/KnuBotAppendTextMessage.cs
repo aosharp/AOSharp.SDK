@@ -16,10 +16,13 @@ using AOSharp.Common.GameData;
 
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
-    using SmokeLounge.AOtomation.Messaging.GameData;
     using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// KnubotAppendTextIIR_c: the kind, then the text (an int length, 0..10000, and its bytes); the client shows the
+    /// text in the chat window as the kind says. Read by KnuBotAppendTextSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.KnubotAppendText)]
     public class KnuBotAppendTextMessage : N3Message
     {
@@ -28,26 +31,26 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public KnuBotAppendTextMessage()
         {
             this.N3MessageType = N3MessageType.KnubotAppendText;
+            this.Unknown1 = 2;
         }
 
         #endregion
 
         #region AoMember Properties
 
+        /// <summary>KnubotBaseIIR_c's version: 2 (another fails the client's read).</summary>
         [AoMember(0)]
         public short Unknown1 { get; set; }
 
+        /// <summary>The NPC.</summary>
         [AoMember(1)]
         public Identity Target { get; set; }
 
         [AoMember(2)]
-        public int Unknown2 { get; set; }
+        public int Kind { get; set; }
 
         [AoMember(3, SerializeSize = ArraySizeType.Int32)]
         public string Text { get; set; }
-
-        [AoMember(4)]
-        public int Unknown3 { get; set; }
 
         #endregion
     }

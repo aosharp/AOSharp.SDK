@@ -16,6 +16,11 @@ namespace SmokeLounge.AOtomation.Messaging.GameData
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// A piece of clothing as SimpleCharFullUpdate and CorpseFullUpdate send it: a packed int, then the texture and an
+    /// int. A positive packed int carries the place in its low half and <see cref="Unknown1"/> in its high half; a
+    /// positive high half adds <see cref="Unknown2"/> and <see cref="Unknown3"/>. Any other packed int is the place.
+    /// </summary>
     public class Texture
     {
         #region AoMember Properties
@@ -28,6 +33,17 @@ namespace SmokeLounge.AOtomation.Messaging.GameData
 
         [AoMember(2)]
         public int Unknown { get; set; }
+
+        /// <summary>
+        /// The packed int's high half. This and the two below are not members: messages read by attribute take the
+        /// three ints above; SimpleCharFullUpdate's and CorpseFullUpdate's serializers set them.
+        /// </summary>
+        public short Unknown1 { get; set; }
+
+        /// <summary>Sent only when <see cref="Unknown1"/> is positive.</summary>
+        public int Unknown2 { get; set; }
+
+        public int Unknown3 { get; set; }
 
         #endregion
     }

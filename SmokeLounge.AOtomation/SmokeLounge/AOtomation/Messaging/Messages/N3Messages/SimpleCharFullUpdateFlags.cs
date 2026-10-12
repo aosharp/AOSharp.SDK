@@ -100,6 +100,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         UnknownFlag5 = 0x10000000,
 
         // 0010 0000 0000 0000 0000 0000 0000 0000
-        UnknownFlag4 = 0x20000000
+        UnknownFlag4 = 0x20000000,
+
+        // 0100 0000 0000 0000 0000 0000 0000 0000
+        HasIdentities = 0x40000000
     }
 }

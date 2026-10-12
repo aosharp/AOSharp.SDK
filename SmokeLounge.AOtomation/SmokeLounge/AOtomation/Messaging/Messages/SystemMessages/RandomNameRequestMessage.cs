@@ -16,9 +16,11 @@ using AOSharp.Common.GameData;
 
 namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
-    using SmokeLounge.AOtomation.Messaging.GameData;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// Asks the server for a name: the breed, the sex and the profession chosen.
+    /// </summary>
     [AoContract((int)SystemMessageType.RandomNameRequest)]
     public class RandomNameRequestMessage : SystemMessage
     {
@@ -34,6 +36,12 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         #region AoMember Properties
 
         [AoMember(0)]
+        public Breed Breed { get; set; }
+
+        [AoMember(1)]
+        public Gender Gender { get; set; }
+
+        [AoMember(2)]
         public Profession Profession { get; set; }
 
         #endregion

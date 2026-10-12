@@ -16,6 +16,11 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// SocialActionCmd_t, an n3Command_t: n3Command_t::WriteSubClass writes the verification and the command
+    /// number, then the subclass the animation (AbstractAnimID_e). The client's reader fails an animation outside
+    /// 1..0x47.
+    /// </summary>
     [AoContract((int)N3MessageType.SocialActionCmd)]
     public class SocialActionCmdMessage : N3Message
     {
@@ -31,21 +36,12 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         #region AoMember Properties
 
         [AoMember(0)]
-        public byte Unknown1 { get; set; }
+        public int Verification { get; set; }
 
         [AoMember(1)]
-        public byte Unknown2 { get; set; }
+        public int Command { get; set; }
 
         [AoMember(2)]
-        public byte Unknown3 { get; set; }
-
-        [AoMember(3)]
-        public byte Unknown4 { get; set; }
-
-        [AoMember(4)]
-        public int Unknown5 { get; set; }
-
-        [AoMember(5)]
         public SocialAction Action { get; set; }
 
         #endregion

@@ -46,6 +46,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(2)]
         public int? PlayfieldId { get; set; }
 
+        /// <summary>
+        /// Sent with HasFightingTarget, and again with IsUnderAttack; the later one wins, as in the client.
+        /// </summary>
         [AoMember(3)]
         public Identity? FightingTarget { get; set; }
 
@@ -117,17 +120,19 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         [AoMember(25)]
         public ScfuFlags2 Flags2 { get; set; }
 
+        /// <summary>With HasPairs: int pairs, then <see cref="PairsUnknown"/> and <see cref="PairsIdentity"/>.</summary>
         [AoMember(26)]
-        public SimpleCharInfo.SpecialAttackData[] SpecialAttacks { get; set; }
+        public GameTuple<int, int>[] Pairs { get; set; }
 
+        /// <summary>The last byte of the message.</summary>
         [AoMember(27)]
         public byte ScfuUnk2 { get; set; }
 
         [AoMember(28)]
-        public float ScfuUnk3 { get; set; }
+        public int PairsUnknown { get; set; }
 
         [AoMember(29)]
-        public byte ScfuUnk4 { get; set; }
+        public Identity PairsIdentity { get; set; }
 
         [AoMember(30)]
         public SimpleCharInfo.TextureOverride[] TextureOverrides { get; set; }
@@ -140,6 +145,38 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 
         [AoMember(33)]
         public byte ScfuTowerUnk { get; set; }
+
+        /// <summary>With IsImmune.</summary>
+        [AoMember(34)]
+        public byte ImmuneUnknown { get; set; }
+
+        /// <summary>With UnknownFlag3.</summary>
+        [AoMember(35)]
+        public byte Flag3Unknown { get; set; }
+
+        /// <summary>With HasWaypoints: the identity before the points.</summary>
+        [AoMember(36)]
+        public Identity WaypointTarget { get; set; }
+
+        /// <summary>With HasNoWeaponPairs.</summary>
+        [AoMember(37)]
+        public SimpleCharInfo.WeaponPair[] WeaponPairs { get; set; }
+
+        /// <summary>With UnknownFlag4.</summary>
+        [AoMember(38)]
+        public byte Flag4Unknown { get; set; }
+
+        /// <summary>With HasIdentities.</summary>
+        [AoMember(39)]
+        public Identity[] Identities { get; set; }
+
+        /// <summary>With ScfuFlags2.Unknown1.</summary>
+        [AoMember(40)]
+        public byte Flags2Unknown { get; set; }
+
+        /// <summary>The target sent with HasFightingTarget, when IsUnderAttack sends another after it.</summary>
+        [AoMember(41)]
+        public Identity? EarlyFightingTarget { get; set; }
 
         #endregion
 
@@ -162,6 +199,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
     [Flags]
     public enum ScfuFlags2
     {
+        HasPairs = 0x1,
         Unknown1 = 0x2,
         HasOwner = 0x4,
         Unknown3 = 0x40,

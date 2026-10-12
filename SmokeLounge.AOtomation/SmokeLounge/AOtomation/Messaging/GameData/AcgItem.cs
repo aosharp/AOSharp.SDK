@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MonsterInfoPacket.cs" company="SmokeLounge">
+// <copyright file="AcgItem.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,13 +8,34 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the MonsterInfoPacket type.
+//   Defines the AcgItem type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace SmokeLounge.AOtomation.Messaging.GameData
 {
-    public class MonsterInfoPacket : InfoPacket
+    using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
+
+    /// <summary>
+    /// The client's ACGItem_t, as its reader leaves it: a low id, a high id (the low id when 0), a quality (masked to
+    /// 0x1ff when above it) and an int after it.
+    /// </summary>
+    public class AcgItem
     {
+        #region AoMember Properties
+
+        [AoMember(0)]
+        public int LowId { get; set; }
+
+        [AoMember(1)]
+        public int HighId { get; set; }
+
+        [AoMember(2)]
+        public int Quality { get; set; }
+
+        [AoMember(3)]
+        public int Unknown1 { get; set; }
+
+        #endregion
     }
 }

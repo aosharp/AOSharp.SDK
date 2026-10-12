@@ -15,9 +15,13 @@
 namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The account's characters: a count, each character (CharacterData_t, then its status word), the slots, the
+    /// expansions and whether shadowlands professions are on. Servers that leave the last off are read as the client
+    /// reads them (off, the read not failed). Read and written by CharacterListSerializer.
+    /// </summary>
     [AoContract((int)SystemMessageType.CharacterList)]
     public class CharacterListMessage : SystemMessage
     {
@@ -26,20 +30,25 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         public CharacterListMessage()
         {
             this.SystemMessageType = SystemMessageType.CharacterList;
+            this.Characters = new LoginCharacterInfo[0];
         }
 
         #endregion
 
         #region AoMember Properties
 
-        [AoMember(0, SerializeSize = ArraySizeType.Int32)]
+        [AoMember(0)]
         public LoginCharacterInfo[] Characters { get; set; }
 
+        /// <summary>The character slots.</summary>
         [AoMember(1)]
         public int AllowedCharacters { get; set; }
 
         [AoMember(2)]
         public int Expansions { get; set; }
+
+        [AoMember(3)]
+        public bool ShadowlandsProfessionsEnabled { get; set; }
 
         #endregion
     }

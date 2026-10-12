@@ -13,7 +13,7 @@
     <IsPackable>true</IsPackable>
     <PackageId Condition="'$(SmokeLoungePackageId)' != ''">$(SmokeLoungePackageId)</PackageId>
     <PackageId Condition="'$(PackageId)' == ''">SmokeLounge.AOtomation</PackageId>
-    <Version>1.0.9</Version>
+    <Version>1.0.10</Version>
     <Authors>AOSharp</Authors>
     <Description>AO messaging and serialization types (SmokeLounge.AOtomation).</Description>
     <PackageTags>AOSharp;AnarchyOnline;SmokeLounge;Messaging</PackageTags>

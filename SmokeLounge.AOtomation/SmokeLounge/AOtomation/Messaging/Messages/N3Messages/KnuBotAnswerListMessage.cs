@@ -20,6 +20,10 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
     using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// KnubotAnswerListIIR_c: a count, then that many answers, each an int length and its text. The client fails
+    /// the read for a count or a length outside 1..1000. Read by KnuBotAnswerListSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.KnubotAnswerList)]
     public class KnuBotAnswerListMessage : N3Message
     {
@@ -28,15 +32,18 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public KnuBotAnswerListMessage()
         {
             this.N3MessageType = N3MessageType.KnubotAnswerList;
+            this.Unknown1 = 2;
         }
 
         #endregion
 
         #region AoMember Properties
 
+        /// <summary>KnubotBaseIIR_c's version: 2 (another fails the client's read).</summary>
         [AoMember(0)]
         public short Unknown1 { get; set; }
 
+        /// <summary>The NPC.</summary>
         [AoMember(1)]
         public Identity Target { get; set; }
 

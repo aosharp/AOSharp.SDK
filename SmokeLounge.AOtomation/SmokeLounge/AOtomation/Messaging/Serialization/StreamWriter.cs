@@ -110,7 +110,12 @@ namespace SmokeLounge.AOtomation.Messaging.Serialization
         {
             var bytes = new byte[padToLength ?? str.Length];
             var length = str.Length > bytes.Length ? bytes.Length : str.Length;
-            Encoding.ASCII.GetBytes(str, 0, length, bytes, 0);
+            // One byte a character (Latin-1), as the client's strings are; a character it cannot hold is '?'.
+            for (var i = 0; i < length; i++)
+            {
+                bytes[i] = str[i] <= 0xFF ? (byte)str[i] : (byte)'?';
+            }
+
             this.writer.Write(bytes);
         }
 

@@ -22,6 +22,12 @@ namespace SmokeLounge.AOtomation.Messaging.GameData
         {
             public short Family { get; set; }
             public short LosHeight { get; set; }
+
+            /// <summary>A byte with UnknownDataFlag, else an int16.</summary>
+            public short Unknown1 { get; set; }
+
+            /// <summary>An int16; when positive, the message's ScfuTowerUnk byte follows.</summary>
+            public short Unknown2 { get; set; }
         }
 
         public class PlayerInfo : SimpleCharInfo
@@ -45,15 +51,13 @@ namespace SmokeLounge.AOtomation.Messaging.GameData
             public int  OrgId { get; set; }
         }
 
-        public class SpecialAttackData
+        /// <summary>An entry of the HasNoWeaponPairs list: four ints.</summary>
+        public class WeaponPair
         {
-            public short Unknown1 { get; set; }
-            public short Unknown2 { get; set; }
-            public short Unknown3 { get; set; }
-            public short Unknown4 { get; set; }
-            public short Unknown5 { get; set; }
-            public string Name { get; set; }
-            public short Unknown6 { get; set; }
+            public int Unknown1 { get; set; }
+            public int Unknown2 { get; set; }
+            public int Unknown3 { get; set; }
+            public int Unknown4 { get; set; }
         }
 
         public class TextureOverride

@@ -16,9 +16,13 @@ using AOSharp.Common.GameData;
 
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
-    using SmokeLounge.AOtomation.Messaging.GameData;
+    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// KnubotOpenChatWindowIIR_c: two ints after the base; the client keeps whether each is 1 and hands both, with
+    /// the NPC, to the chat window. Read by KnuBotOpenChatWindowSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.KnubotOpenChatWindow)]
     public class KnuBotOpenChatWindowMessage : N3Message
     {
@@ -27,15 +31,18 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public KnuBotOpenChatWindowMessage()
         {
             this.N3MessageType = N3MessageType.KnubotOpenChatWindow;
+            this.Unknown1 = 2;
         }
 
         #endregion
 
         #region AoMember Properties
 
+        /// <summary>KnubotBaseIIR_c's version: 2 (another fails the client's read).</summary>
         [AoMember(0)]
         public short Unknown1 { get; set; }
 
+        /// <summary>The NPC.</summary>
         [AoMember(1)]
         public Identity Target { get; set; }
 

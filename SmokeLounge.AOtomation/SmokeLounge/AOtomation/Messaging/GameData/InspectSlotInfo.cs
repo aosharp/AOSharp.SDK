@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NanoEffect.cs" company="SmokeLounge">
+// <copyright file="InspectSlotInfo.cs" company="SmokeLounge">
 //   Copyright © 2013 SmokeLounge.
 //   This program is free software. It comes without any warranty, to
 //   the extent permitted by applicable law. You can redistribute it
@@ -8,36 +8,48 @@
 //   http://www.wtfpl.net/ for more details.
 // </copyright>
 // <summary>
-//   Defines the NanoEffect type.
+//   Defines the InspectSlotInfo type.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 using AOSharp.Common.GameData;
-using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
 namespace SmokeLounge.AOtomation.Messaging.GameData
 {
+    using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
+
+    /// <summary>
+    /// An equipped item as InspectIIR_c sends it: its slot, two int16s, its identity, then an ACGItem_t (low id, high
+    /// id, quality and an int).
+    /// </summary>
     public class InspectSlotInfo
     {
+        #region AoMember Properties
+
         [AoMember(0)]
         public EquipSlot EquipSlot { get; set; }
 
         [AoMember(1)]
-        public int Unk1 { get; set; }
+        public short Unknown1 { get; set; }
 
         [AoMember(2)]
-        public Identity UniqueIdentity { get; set; }
+        public short Unknown2 { get; set; }
 
         [AoMember(3)]
-        public int LowId { get; set; }
+        public Identity UniqueIdentity { get; set; }
 
         [AoMember(4)]
-        public int HighId { get; set; }
+        public int LowId { get; set; }
 
         [AoMember(5)]
-        public int Ql { get; set; }
+        public int HighId { get; set; }
 
         [AoMember(6)]
-        public int Unk2 { get; set; }
+        public int Ql { get; set; }
+
+        [AoMember(7)]
+        public int Unknown3 { get; set; }
+
+        #endregion
     }
 }

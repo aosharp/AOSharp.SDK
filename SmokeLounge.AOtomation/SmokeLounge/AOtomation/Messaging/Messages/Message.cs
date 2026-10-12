@@ -24,6 +24,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages
 
         public byte[] RawPacket {  get; set; }
 
+        /// <summary>The read ran past the end of the packet: what it lacked was read as 0 (the client drops such a message).</summary>
+        public bool ReadFailed { get; set; }
+
         #endregion
     }
 }

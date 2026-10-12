@@ -15,9 +15,12 @@
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// InfoPacketIIR_t: the <see cref="GameData.InfoPacket"/> of the character the message names. The client's reader
+    /// fails (and the message is dropped) when its stream does. Read and written by InfoPacketSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.InfoPacket)]
     public class InfoPacketMessage : N3Message
     {
@@ -26,6 +29,7 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public InfoPacketMessage()
         {
             this.N3MessageType = N3MessageType.InfoPacket;
+            this.Info = new InfoPacket();
         }
 
         #endregion
@@ -33,20 +37,6 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         #region AoMember Properties
 
         [AoMember(0)]
-        [AoFlags("flags")]
-        public InfoPacketType Type { get; set; }
-
-        [AoMember(1)]
-        [AoUsesFlags("flags", typeof(CharacterInfoPacket), FlagsCriteria.EqualsToAny, 
-            new[]
-                {
-                    (int)InfoPacketType.Character, (int)InfoPacketType.CharacterOrg, (int)InfoPacketType.CharacterOrgSite, 
-                    (int)InfoPacketType.CharacterOrgSiteTower
-                })]
-        [AoUsesFlags("flags", typeof(MonsterInfoPacket), FlagsCriteria.EqualsToAny, 
-            new[] { (int)InfoPacketType.Monster, })]
-        [AoUsesFlags("flags", typeof(TowerInfoPacket), FlagsCriteria.EqualsToAny, 
-            new[] { (int)InfoPacketType.Tower, (int)InfoPacketType.ControlTower })]
         public InfoPacket Info { get; set; }
 
         #endregion

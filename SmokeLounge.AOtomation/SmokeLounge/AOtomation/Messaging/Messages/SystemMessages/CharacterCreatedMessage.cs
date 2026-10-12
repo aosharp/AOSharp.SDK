@@ -16,6 +16,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// The new character's id, which the client then logs in with.
+    /// </summary>
     [AoContract((int)SystemMessageType.CharacterCreated)]
     public class CharacterCreatedMessage : SystemMessage
     {
@@ -24,7 +27,6 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         public CharacterCreatedMessage()
         {
             this.SystemMessageType = SystemMessageType.CharacterCreated;
-            this.Unknown = 0xB0D2FFFF;
         }
 
         #endregion
@@ -33,9 +35,6 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 
         [AoMember(0)]
         public int CharacterId { get; set; }
-
-        [AoMember(1)]
-        public uint Unknown { get; set; }
 
         #endregion
     }

@@ -12,14 +12,18 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
+    using AOSharp.Common.GameData;
+
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// Spells to run on a character (SpellListIIR_t): the spells, the dynel they come from, an identity and a flag,
+    /// a name, optionally an item, a flag and an int. The client hands them to the character's spell handler. Read and
+    /// written by SpellListSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.SpellList)]
     public class SpellListMessage : N3Message
     {
@@ -28,20 +32,44 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public SpellListMessage()
         {
             this.N3MessageType = N3MessageType.SpellList;
+            this.Spells = new SpellData[0];
+            this.Name = string.Empty;
         }
 
         #endregion
 
         #region AoMember Properties
 
-        //This really isn't used by us and it's definition is incorrect so until
-        //someone (Mali) properly defines the struct this message will just be empty.
+        /// <summary>A positive 0x3F1 list of at most 999.</summary>
+        [AoMember(0)]
+        public SpellData[] Spells { get; set; }
 
-        //[AoMember(0, SerializeSize = ArraySizeType.Int32)]
-        //public NanoEffect[] NanoEffects { get; set; }
+        /// <summary>The dynel the spells come from (0:0, none).</summary>
+        [AoMember(1)]
+        public Identity Source { get; set; }
 
-        //[AoMember(1)]
-        //public Identity Character { get; set; }
+        [AoMember(2)]
+        public Identity Unknown1 { get; set; }
+
+        [AoMember(3)]
+        public bool Unknown2 { get; set; }
+
+        /// <summary>A 16-bit length (0x8000 and above fails the read), then its bytes.</summary>
+        [AoMember(4)]
+        public string Name { get; set; }
+
+        [AoMember(5)]
+        public bool HasItem { get; set; }
+
+        /// <summary>With <see cref="HasItem"/>: an item the spells use, taken when the target is a character.</summary>
+        [AoMember(6)]
+        public Identity Item { get; set; }
+
+        [AoMember(7)]
+        public bool Unknown3 { get; set; }
+
+        [AoMember(8)]
+        public int Unknown4 { get; set; }
 
         #endregion
     }

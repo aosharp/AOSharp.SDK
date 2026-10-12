@@ -25,7 +25,6 @@ namespace AOSharp.Core
 
             Network.Send(new QuestAlternativeMessage()
             {
-                Unknown1 = 4,
                 MissionSliders = new MissionSliders
                 {
                     Difficulty = difficulty,

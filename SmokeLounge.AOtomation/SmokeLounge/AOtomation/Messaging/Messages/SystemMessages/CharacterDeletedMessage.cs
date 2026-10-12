@@ -16,6 +16,9 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
 {
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// A character was deleted. The client reads no body: the one deleted is the one it asked for.
+    /// </summary>
     [AoContract((int)SystemMessageType.CharacterDeleted)]
     public class CharacterDeletedMessage : SystemMessage
     {
@@ -25,13 +28,6 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.SystemMessages
         {
             this.SystemMessageType = SystemMessageType.CharacterDeleted;
         }
-
-        #endregion
-
-        #region AoMember Properties
-
-        [AoMember(0)]
-        public int CharacterId { get; set; }
 
         #endregion
     }

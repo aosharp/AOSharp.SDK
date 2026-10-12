@@ -12,14 +12,15 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AOSharp.Common.GameData;
-
 namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
 {
     using SmokeLounge.AOtomation.Messaging.GameData;
-    using SmokeLounge.AOtomation.Messaging.Serialization;
     using SmokeLounge.AOtomation.Messaging.Serialization.MappingAttributes;
 
+    /// <summary>
+    /// QuestFullUpdateIIR_t: the character's quests (a positive 0x3F1 count), then whether each is announced as new.
+    /// Read and written by QuestFullUpdateSerializer.
+    /// </summary>
     [AoContract((int)N3MessageType.QuestFullUpdate)]
     public class QuestFullUpdateMessage : N3Message
     {
@@ -28,14 +29,18 @@ namespace SmokeLounge.AOtomation.Messaging.Messages.N3Messages
         public QuestFullUpdateMessage()
         {
             this.N3MessageType = N3MessageType.QuestFullUpdate;
+            this.Quests = new Quest[0];
         }
 
         #endregion
 
         #region AoMember Properties
 
-        [AoMember(0, SerializeSize = ArraySizeType.X3F1)]
+        [AoMember(0)]
         public Quest[] Quests { get; set; }
+
+        [AoMember(1)]
+        public bool Announce { get; set; }
 
         #endregion
     }
