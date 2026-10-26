@@ -133,6 +133,9 @@ namespace AOSharp.Core
         {
             DynelManager.Update();
 
+            // Before the player check: the window is there with or without one.
+            GameWindow.Update();
+
             if (DynelManager.LocalPlayer == null)
                 return;
 
